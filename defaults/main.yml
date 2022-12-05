@@ -64,10 +64,10 @@ nautobot__ports:
 - "{{ nautobot__port_https }}:8443"
 nautobot__directory_volumes:
 - "{{ nautobot__home }}/config:/opt/nautobot/"
+- "{{ nautobot__home }}/logs:/var/log/nautobot"
 # - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
 # - "{{ nautobot__home }}/media:/opt/nautobot/media"
 # - "{{ nautobot__home }}/static:/opt/nautobot/static"
-- "{{ nautobot__home }}/logs:/var/log/nautobot"
 nautobot__file_volumes: []
 # - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
 nautobot__postgres_directory_volumes:
