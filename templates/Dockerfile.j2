@@ -1,42 +1,12 @@
 ARG PYTHON_VER={{ nautobot__image_python_version | default('3.9') }}
 ARG NAUTOBOT_IMAGE={{ nautobot__image }}
-# ---------------------------------
-# Stage: PreRequistics
-# ---------------------------------
-FROM networktocode/${NAUTOBOT_IMAGE}-py${PYTHON_VER} as base
-USER 0
-RUN apt-get update -y && apt-get install -y libldap2-dev libsasl2-dev libssl-dev
+FROM networktocode/${NAUTOBOT_IMAGE}-py${PYTHON_VER}
 
-# ---------------------------------
-# Stage: Builder
-# ---------------------------------
-FROM base as builder
-
-RUN apt-get install -y gcc && \
-    apt-get autoremove -y && \
-    apt-get clean all && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install --upgrade pip wheel && pip3 install django-auth-ldap
+RUN pip3 install --upgrade pip wheel 
 RUN pip3 install --upgrade nautobot[napalm]
 
 {% if nautobot__plugins is defined %}
-RUN pip3 install --upgrade nornir-nautobot
 {% for plugin in nautobot__plugins %}
 RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}
 {% endfor %}
 {% endif %}
-
-
-# ---------------------------------
-# Stage: Final
-# ---------------------------------
-FROM base as final
-ARG PYTHON_VER
-USER 0
-
-COPY --from=builder /usr/local/lib/python${PYTHON_VER}/site-packages /usr/local/lib/python${PYTHON_VER}/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
-USER nautobot
-
-WORKDIR /opt/nautobot

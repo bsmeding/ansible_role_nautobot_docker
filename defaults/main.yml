@@ -1,7 +1,7 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:1.4.7
+nautobot__image: nautobot:1.4
 nautobot__image_python_version: '3.9'
 nautobot__port_http: 8081
 nautobot__port_https: 8444
@@ -52,7 +52,7 @@ nautobot__directories:
 # - path: "{{ nautobot__home }}/jobs"
 #   mode: "0770"
 # - path: "{{ nautobot__home }}/media"
-#   mode: "0770"
+#   mode: "0770"  
 # - path: "{{ nautobot__home }}/static"
 #   mode: "0770"
 # nautobot__config_volume_name: nautobot_conf
@@ -104,23 +104,23 @@ nautobot__default_env:
   # Uncomment REDIS_SSL if using SSL
   # NAUTOBOT_REDIS_SSL=True
   NAUTOBOT_SECRET_KEY: "{{ nautobot__secret_key }}"
-nautobot__env: {}
-  # NAUTOBOT_AUTH_LDAP_SERVER_URI: "ldap://{{ nautobot__ldap_auth_server_ip }}:{{ nautobot__ldap_auth_server_port }}"
-  # NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
-  # NAUTOBOT_AUTH_LDAP_BIND_PASSWORD: "{{ nautobot__ldap_auth_bind_pass }}"
-
+  NAUTOBOT_AUTH_LDAP_SERVER_URI: "ldap://{{ nautobot__ldap_auth_server_ip }}:{{ nautobot__ldap_auth_server_port }}"
+  NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
+  NAUTOBOT_AUTH_LDAP_BIND_PASSWORD: "{{ nautobot__ldap_auth_bind_pass }}"
+  
 nautobot__redis_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ docker_uid|default(1040) }}"
   GUID: "{{ docker_gid|default(1001) }}"
   NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
-nautobot__postgres_env:
+nautobot__postgres_env: 
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ docker_uid|default(1040) }}"
   GUID: "{{ docker_gid|default(1001) }}"
   POSTGRES_DB: "nautobot"
   POSTGRES_PASSWORD: "{{ nautobot__postgres_password }}"
   POSTGRES_USER: "{{ nautobot__postgres_user }}"
+  NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
 nautobot__postgres_user_env: {}
 
 # nautobot__plugins:
