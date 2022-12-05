@@ -24,11 +24,8 @@ First install requirements.yml file:
 
 ```
 roles:
-- name: bsmeding_docker
-  src: git+https://github.com/bsmeding/ansible_role_docker
-- name: docker_nautobot
-  src: git+https://github.com/bsmeding/ansible_role_nautobot_docker
-
+- name: bsmeding.docker
+- name: bsmeding.nautobot_docker
 ```
 
 Install the required roles:

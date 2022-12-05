@@ -1,5 +1,5 @@
 galaxy_info:
-  role_name: docker_nautobot
+  role_name: nautobot_docker
   author: Bart Smeding
   description: Manage and run the Nautobot CMDB docker container.
   license: MIT

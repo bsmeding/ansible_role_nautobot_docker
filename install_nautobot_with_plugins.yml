@@ -76,7 +76,7 @@
   tasks:
     # - name: Check if nautobot is installed
     #   include_role:
-    #     name: docker
+    #     name: bsmeding.docker
     - name: Check if nautobot is installed
       include_role:
-        name: docker_nautobot
+        name: bsmeding.nautobot_docker
