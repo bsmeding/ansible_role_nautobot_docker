@@ -17,13 +17,17 @@ Example playbook to install Nautobot on clean Ubununt
 
 Basic install: (Create/ use an inventory with group nautobot or change hosts)
 
+Install pip requirementes on ansible host
+`pip install -r requirements.txt` # NOTE .txt for Python install
+
 First install requirements.yml file:
 
 ```
 roles:
 - name: bsmeding_docker
   src: git+https://github.com/bsmeding/ansible_role_docker
-- src: git+https://github.com/bsmeding/ansible_role_nautobot_docker
+- name: docker_nautobot
+  src: git+https://github.com/bsmeding/ansible_role_nautobot_docker
 
 ```
 
