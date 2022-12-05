@@ -169,6 +169,11 @@
       nautobot__image: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
+- name: Set Docker Hub image
+  set_fact:
+    nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}"
+  when: nautobot__plugins is undefined or nautobot__plugins|length<1
+
 - name: Run nautobot container frontend
   community.docker.docker_container:
     name: "{{ nautobot__name }}"

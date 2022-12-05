@@ -20,6 +20,7 @@ galaxy_info:
   - nautobot
   - cmdb
   - ssot
+  - docker
 
 dependencies: []
   # - bsmeding.docker
