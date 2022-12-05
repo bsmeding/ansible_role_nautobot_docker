@@ -8,17 +8,18 @@ galaxy_info:
   platforms:
   - name: Ubuntu
     versions:
-    - all
+    - bionic
+    - focal
+    - jammy
   - name: Debian
     versions:
-    - all
-  - name: RHEL
-    versions:
-    - all
+    - stretch
+    - buster
+    - bullseye
   galaxy_tags:
   - nautobot
   - cmdb
   - ssot
 
 dependencies: []
-  # - docker
+  # - bsmeding.docker
