@@ -172,7 +172,7 @@
 - name: Run nautobot container frontend
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
-    image: "{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}"
+    image: "{{ nautobot__image }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"
