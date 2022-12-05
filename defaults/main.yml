@@ -1,9 +1,9 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:1.4
+nautobot__image: nautobot:1.4.7
 nautobot__image_python_version: '3.9'
-nautobot__port_http: 8081
+nautobot__port_http: 8080
 nautobot__port_https: 8444
 nautobot__superuser_name: admin
 nautobot__superuser_password: admin
@@ -23,6 +23,7 @@ nautobot__postgres_image: postgres:14
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
 nautobot__redis_password: nautobotredispassw
+nautobot__install_worker: false
 nautobot__install_redis_client_tools: false
 nautobot__container_uid: 999 # Do not change
 nautobot__container_gid: 999 # Do not change

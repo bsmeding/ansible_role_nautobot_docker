@@ -209,6 +209,7 @@
     #   start_period: "5s"
     #   retries: 3
     #   test: ["CMD", "nautobot-server", "health_check"]
+  when: nautobot__install_worker| bool 
 
 - name: Run celery worker 
   community.docker.docker_container:
