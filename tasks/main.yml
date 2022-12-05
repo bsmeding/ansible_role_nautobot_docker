@@ -156,7 +156,7 @@
 
 - name: Build Nautobot with custom plugins (second attempt)
   community.docker.docker_image:
-    name: "{{ nautobot__name }}-custom"
+    name: "{{ nautobot__name }}-custom:{{ nautobot__image|split(':')[1] }}"
     build:
       path: "{{ nautobot__home }}"
     source: build
@@ -165,7 +165,7 @@
 - name: Run nautobot container frontend
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
-    image: "{{ nautobot__name }}-custom"
+    image: "{{ nautobot__name }}-custom:{{ nautobot__image|split(':')[1] }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"
@@ -186,7 +186,7 @@
 - name: Run nautobot worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-worker"
-    image: "{{ nautobot__name }}-custom"
+    image: "{{ nautobot__name }}-custom:{{ nautobot__image|split(':')[1] }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -206,7 +206,7 @@
 - name: Run celery worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-worker"
-    image: "{{ nautobot__name }}-custom"
+    image: "{{ nautobot__name }}-custom:{{ nautobot__image|split(':')[1] }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -226,7 +226,7 @@
 - name: Run celery beat
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-beat"
-    image: "{{ nautobot__name }}-custom"
+    image: "{{ nautobot__name }}-custom:{{ nautobot__image|split(':')[1] }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
