@@ -50,10 +50,10 @@ nautobot__directories:
   mode: "0760"
 - path: "{{ nautobot__home }}/config"
   mode: "0770"
-# - path: "{{ nautobot__home }}/jobs"
-#   mode: "0770"
+- path: "{{ nautobot__home }}/logs"
+  mode: "0770"
 # - path: "{{ nautobot__home }}/media"
-#   mode: "0770"  
+#   mode: "0770"
 # - path: "{{ nautobot__home }}/static"
 #   mode: "0770"
 # nautobot__config_volume_name: nautobot_conf
@@ -108,13 +108,13 @@ nautobot__default_env:
   NAUTOBOT_AUTH_LDAP_SERVER_URI: "ldap://{{ nautobot__ldap_auth_server_ip }}:{{ nautobot__ldap_auth_server_port }}"
   NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
   NAUTOBOT_AUTH_LDAP_BIND_PASSWORD: "{{ nautobot__ldap_auth_bind_pass }}"
-  
+
 nautobot__redis_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ docker_uid|default(1040) }}"
   GUID: "{{ docker_gid|default(1001) }}"
   NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
-nautobot__postgres_env: 
+nautobot__postgres_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ docker_uid|default(1040) }}"
   GUID: "{{ docker_gid|default(1001) }}"
