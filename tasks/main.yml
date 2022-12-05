@@ -129,56 +129,43 @@
     group: "{{ nautobot__container_gid }}"
   notify: restart nautobot-stack
 
-- name: Plugins found - build custom image
-  block:
-  - name: Copy Dockerfile with plugins
-    template:
-      src: Dockerfile_LDAP.j2
-      dest: "{{ nautobot__home }}/Dockerfile"
-    register: dockerfile
+- name: Copy Dockerfile
+  template:
+    src: Dockerfile.j2
+    dest: "{{ nautobot__home }}/Dockerfile"
+  register: dockerfile
 
-  - name: Build Nautobot with custom plugins
-    community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom"
-      build:
-        path: "{{ nautobot__home }}"
-        nocache: true
-        pull: "{{ nautobot__pull_image | default(false) }}"
-      source: build
-      force_source: yes
-    register: docker_build
-    ignore_errors: true
-    when: dockerfile.changed
+- name: Build Nautobot with custom plugins
+  community.docker.docker_image:
+    name: "{{ nautobot__name }}-custom"
+    build:
+      path: "{{ nautobot__home }}"
+      nocache: true
+      pull: "{{ nautobot__pull_image | default(false) }}"
+    source: build
+    force_source: yes
+  register: docker_build
+  ignore_errors: true
+  when: dockerfile.changed
 
-  - name: Restart Docker if build failed
-    ansible.builtin.service:
-      name: docker
-      state: restarted
-    when: docker_build is defined and docker_build.changed
+- name: Restart Docker if build failed
+  ansible.builtin.service:
+    name: docker
+    state: restarted
+  when: docker_build is defined and docker_build.changed
 
-  - name: Build Nautobot with custom plugins (second attempt)
-    community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom"
-      build:
-        path: "{{ nautobot__home }}"
-      source: build
-    when: docker_build is defined and docker_build.changed
-
-  - name: Override image name with local Docker
-    set_fact:
-      nautobot__image: "{{ nautobot__name }}-custom"
-
-  when: nautobot__plugins is defined and nautobot__plugins|length>0
-
-- name: Set correct docker hub version
-  set_fact:
-    nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}"
-  when: nautobot__plugins is undefined or nautobot__plugins|length<1
+- name: Build Nautobot with custom plugins (second attempt)
+  community.docker.docker_image:
+    name: "{{ nautobot__name }}-custom"
+    build:
+      path: "{{ nautobot__home }}"
+    source: build
+  when: docker_build is defined and docker_build.changed
 
 - name: Run nautobot container frontend
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
-    image: "{{ nautobot__image }}"
+    image: "{{ nautobot__name }}-custom"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"
@@ -199,7 +186,7 @@
 - name: Run nautobot worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-worker"
-    image: "{{ nautobot__image }}"
+    image: "{{ nautobot__name }}-custom"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -219,7 +206,7 @@
 - name: Run celery worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-worker"
-    image: "{{ nautobot__image }}"
+    image: "{{ nautobot__name }}-custom"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -239,7 +226,7 @@
 - name: Run celery beat
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-beat"
-    image: "{{ nautobot__image }}"
+    image: "{{ nautobot__name }}-custom"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
