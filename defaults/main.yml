@@ -1,0 +1,183 @@
+---
+container_time_zone: 'Europe/Amsterdam'
+nautobot__name: nautobot
+nautobot__image: nautobot:1.4
+nautobot__image_python_version: '3.9'
+nautobot__port_http: 8081
+nautobot__port_https: 8444
+nautobot__superuser_name: admin
+nautobot__superuser_password: admin
+nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz0987"
+nautobot__secret_key: 012345678901234567890123456789012345678901234567890123456789
+nautobot__napalm_username: cisco
+nautobot__napalm_password: cisco
+nautobot__ldap_auth_server_ip: ''
+nautobot__ldap_auth_server_port: 389
+nautobot__ldap_search_users: "ou=people,dc=example,dc=com"
+nautobot__ldap_search_groups: "ou=groups,dc=example,dc=com"
+nautobot__ldap_auth_bind_dn: "CN=readonly,OU=people,DC=example,DC=com"
+nautobot__ldap_auth_bind_pass: "readonly"
+nautobot__install_own_postgres_db: true
+nautobot__postgres_name: nautobot-db
+nautobot__postgres_image: postgres:14
+nautobot__postgres_user: nautobotdbuser
+nautobot__postgres_password: nautobotdbpassword
+nautobot__redis_password: nautobotredispassw
+nautobot__install_redis_client_tools: false
+nautobot__container_uid: 999 # Do not change
+nautobot__container_gid: 999 # Do not change
+nautobot__allowed_hosts: '*'
+nautobot__remove_existing_container: false # DO NOT USE WHEN RUNNING PRODUCTION
+nautobot__banner_login: 'nautobot demo use admin, admin to login'
+nautobot__banner_bottom: 'Use for demo only'
+nautobot__pull_image: true
+nautobot__log_level: 'DEBUG' # DEBUG  'INFO'    'WARNING'
+nautobot__network_mode:
+nautobot__network_name: nautobot
+nautobot__network_cidr: 172.16.20.0/26
+nautobot__networks:
+  - name: bridge
+  - name: "{{ nautobot__network_name }}"
+nautobot__purge_networks: false
+nautobot__env: {}
+nautobot__log_driver: json-file
+nautobot__log_options:
+nautobot__home: "/opt/{{ nautobot__name }}"
+nautobot__remove_existing_home_dir: false
+nautobot__directories:
+- path: "{{ nautobot__home }}"
+  mode: "0760"
+- path: "{{ nautobot__home }}/config"
+  mode: "0770"
+# - path: "{{ nautobot__home }}/jobs"
+#   mode: "0770"
+# - path: "{{ nautobot__home }}/media"
+#   mode: "0770"
+# - path: "{{ nautobot__home }}/static"
+#   mode: "0770"
+# nautobot__config_volume_name: nautobot_conf
+# nautobot__config_volume_path: "/var/lib/docker/volumes/{{ nautobot__config_volume_name }}/_data"
+nautobot__db_volume_name: nautobot_db
+nautobot__ports:
+- "{{ nautobot__port_http }}:8080"
+- "{{ nautobot__port_https }}:8443"
+nautobot__directory_volumes:
+- "{{ nautobot__home }}/config:/opt/nautobot/"
+# - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
+# - "{{ nautobot__home }}/media:/opt/nautobot/media"
+# - "{{ nautobot__home }}/static:/opt/nautobot/static"
+- "{{ nautobot__home }}/logs:/var/log/nautobot"
+nautobot__file_volumes: []
+# - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
+nautobot__postgres_directory_volumes:
+- "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"
+nautobot__default_env:
+  TZ: "{{ container_time_zone | default('Europe/Paris') }}"
+  PUID: "{{ nautobot__container_uid | string }}" # "1041" #"{{ docker_uid|default(1040) }}"
+  GUID: "{{ nautobot__container_gid | string }}" # "1001" # "{{ docker_gid|default(1001) }}"
+  NAUTOBOT_CREATE_SUPERUSER: "true"
+  NAUTOBOT_SUPERUSER_NAME: "{{ nautobot__superuser_name | default('admin') }}"
+  NAUTOBOT_SUPERUSER_EMAIL: "admin@admin.org"
+  NAUTOBOT_SUPERUSER_PASSWORD: "{{ nautobot__superuser_password | default('admin') }}"
+  NAUTOBOT_SUPERUSER_API_TOKEN: "{{ nautobot__superuser_api_token }}"
+  NAUTOBOT_BANNER_LOGIN: "{{ nautobot__banner_login }}"
+  NAUTOBOT_BANNER_BOTTOM: "{{ nautobot__banner_bottom }}"
+  NAUTOBOT_ALLOWED_HOSTS: "{{ nautobot__allowed_hosts }}"
+  NAUTOBOT_CHANGELOG_RETENTION: "0"
+  NAUTOBOT_DOCKER_SKIP_INIT: "false"
+  NAUTOBOT_NAPALM_USERNAME: "{{ nautobot__napalm_username }}"
+  NAUTOBOT_NAPALM_PASSWORD: "{{ nautobot__napalm_password }}"
+  NAUTOBOT_CONFIG: "/opt/nautobot/nautobot_config.py"
+  NAUTOBOT_DB_HOST: "{{ nautobot__postgres_name }}"
+  NAUTOBOT_DB_NAME: nautobot
+  NAUTOBOT_DB_PASSWORD: "{{ nautobot__postgres_password }}"
+  NAUTOBOT_DB_USER: "{{ nautobot__postgres_user }}"
+  NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
+  NAUTOBOT_MAX_PAGE_SIZE: "0"
+  NAUTOBOT_NAPALM_TIMEOUT: "5"
+  NAUTOBOT_HIDE_RESTRICTED_UI: "true"
+  NAUTOBOT_LOG_LEVEL: "{{ nautobot__log_level }}"
+  NAUTOBOT_REDIS_HOST: "{{ nautobot__name }}-redis"
+  NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
+  NAUTOBOT_CACHEOPS_REDIS: "redis://:{{ nautobot__redis_password }}@{{ nautobot__name }}-redis:6379/1"
+  NAUTOBOT_REDIS_PORT: "6379"
+  # Uncomment REDIS_SSL if using SSL
+  # NAUTOBOT_REDIS_SSL=True
+  NAUTOBOT_SECRET_KEY: "{{ nautobot__secret_key }}"
+nautobot__env: {}
+  # NAUTOBOT_AUTH_LDAP_SERVER_URI: "ldap://{{ nautobot__ldap_auth_server_ip }}:{{ nautobot__ldap_auth_server_port }}"
+  # NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
+  # NAUTOBOT_AUTH_LDAP_BIND_PASSWORD: "{{ nautobot__ldap_auth_bind_pass }}"
+
+nautobot__redis_env:
+  TZ: "{{ container_time_zone | default('Europe/Paris') }}"
+  PUID: "{{ docker_uid|default(1040) }}"
+  GUID: "{{ docker_gid|default(1001) }}"
+  NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
+nautobot__postgres_env:
+  TZ: "{{ container_time_zone | default('Europe/Paris') }}"
+  PUID: "{{ docker_uid|default(1040) }}"
+  GUID: "{{ docker_gid|default(1001) }}"
+  POSTGRES_DB: "nautobot"
+  POSTGRES_PASSWORD: "{{ nautobot__postgres_password }}"
+  POSTGRES_USER: "{{ nautobot__postgres_user }}"
+  NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
+nautobot__postgres_user_env: {}
+
+# nautobot__plugins:
+#   - plugin_name: nautobot_device_onboarding
+#     plugin_config: {
+#           "nautobot_device_onboarding": {
+#           "default_ip_status": "Active",
+#           "default_device_role": "leaf",
+#           "skip_device_type_on_update": True,
+#           }
+#         }
+#   - plugin_name: nautobot-ssot
+#     plugin_config: {}
+#   - plugin_name: nautobot-plugin-nornir
+#     plugin_config: {
+#       "nautobot_plugin_nornir": {
+#         "use_config_context": {"secrets": False, "connection_options": True},
+#         # Optionally set global connection options.
+#         "connection_options": {
+#             "napalm": {
+#                 "extras": {
+#                     "optional_args": {"global_delay_factor": 1},
+#                 },
+#             },
+#             "netmiko": {
+#                 "extras": {
+#                     "global_delay_factor": 1,
+#                 },
+#             },
+#         },
+#         "nornir_settings": {
+#             "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
+#             "runner": {
+#                 "plugin": "threaded",
+#                 "options": {
+#                     "num_workers": 20,
+#                 },
+#             },
+#         },
+#       }
+#     }
+#   - plugin_name: nautobot-golden-config
+#     plugin_config: {
+#         "nautobot_golden_config": {
+#         "per_feature_bar_width": 0.15,
+#         "per_feature_width": 13,
+#         "per_feature_height": 4,
+#         "enable_backup": True,
+#         "enable_compliance": True,
+#         "enable_intended": True,
+#         "enable_sotagg": True,
+#         "sot_agg_transposer": None,
+#         "enable_postprocessing": False,
+#         "postprocessing_callables": [],
+#         "postprocessing_subscribed": [],
+#         "platform_slug_map": None,
+#         # "get_custom_compliance": "my.custom_compliance.func"
+#         }
+#     }

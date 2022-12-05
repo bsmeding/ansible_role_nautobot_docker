@@ -1,0 +1,24 @@
+galaxy_info:
+  role_name: docker_nautobot
+  author: Bart Smeding
+  description: Manage and run the Nautobot CMDB docker container.
+  license: MIT
+  company: b@rtsmeding.nl
+  min_ansible_version: '2.9'
+  platforms:
+  - name: Ubuntu
+    versions:
+    - all
+  - name: Debian
+    versions:
+    - all
+  - name: RHEL
+    versions:
+    - all
+  galaxy_tags:
+  - nautobot
+  - cmdb
+  - ssot
+
+dependencies: []
+  # - docker

@@ -1,0 +1,271 @@
+---
+- name: Remove existing {{ nautobot__name }} containers
+  block:
+  - name: Remove default
+    docker_container:
+      name: "{{ nautobot__name }}"
+      state: absent
+  - name: Remove Celery Worker
+    docker_container:
+      name: "{{ nautobot__name }}-celery-worker"
+      state: absent
+  - name: Remove Celery Beat
+    docker_container:
+      name: "{{ nautobot__name }}-celery-beat"
+      state: absent
+  - name: Remove Redis
+    docker_container:
+      name: "{{ nautobot__name }}-redis"
+      state: absent                  
+  - name: Remove db
+    docker_container:
+      name: "{{ nautobot__name }}-db"
+      state: absent
+    when: nautobot__install_own_postgres_db
+  when: nautobot__remove_existing_container
+  
+- name: Create a network for nautobot
+  community.docker.docker_network:
+    name: "{{ nautobot__network_name }}"
+    ipam_config:
+      - subnet: "{{ nautobot__network_cidr }}"
+        gateway: "{{ nautobot__network_cidr | ansible.utils.ipaddr('next_usable') }}"
+        iprange: "{{ nautobot__network_cidr }}"
+
+- name: Create database volume for Postgres
+  community.docker.docker_volume:
+    name: "{{ nautobot__db_volume_name }}"
+  when: nautobot__install_own_postgres_db
+
+# - name: Create config volume for Nautobot
+#   community.docker.docker_volume:
+#     name: "{{ nautobot__config_volume_name }}"
+
+- name: Remove home directory
+  file:
+    state: absent
+    path: "{{ nautobot__home }}"
+  when: nautobot__remove_existing_home_dir
+
+- name: Create directories
+  file:
+    state: directory
+    path: "{{ item.path }}"
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ item.owner | default(docker_uid) | default('root') }}" # First docker user (if docker role has run), otherwise default role, otherwise root
+    group: "{{ item.group | default(docker_gid) | default('root') }}"
+  with_items: "{{ nautobot__directories }}"
+
+# Create PostgreSQL  DB
+- name: Run DB container
+  docker_container:
+    name: "{{ nautobot__postgres_name }}"
+    image: "{{ nautobot__postgres_image }}"
+    restart_policy: always
+    networks: 
+      - name: "{{ nautobot__network_name }}"
+    purge_networks: "{{ nautobot__purge_networks | default('no') }}"
+    env: "{{ nautobot__postgres_env | combine(nautobot__postgres_user_env) }}"
+    volumes: "{{ nautobot__postgres_directory_volumes }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+  when: nautobot__install_own_postgres_db
+  
+- name: Run nautobot Redis
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}-redis"
+    image: "redis:alpine"
+    pull: "{{ nautobot__pull_image }}"
+    restart_policy: always
+    network_mode: "{{ nautobot__network_mode }}"
+    networks: 
+      - name: "{{ nautobot__network_name }}"
+    purge_networks: "{{ nautobot__purge_networks | default('no') }}"
+    env: "{{ nautobot__redis_env }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}"  ## $$ because of docker-compose
+
+- name: Install Redis client tools
+  ansible.builtin.package:
+    name: redis-tools
+    state: present
+  when: nautobot__install_redis_client_tools
+  
+- name: Create directories Dockerfile
+  file:
+    state: directory
+    path: "{{ nautobot__home }}"
+    recurse: true
+    mode: "0755"
+    owner: "{{ nautobot__container_uid | default(docker_uid) | default('root') }}"
+    group: "{{ nautobot__container_gid | default(docker_gid) | default('root') }}"
+
+- name: Construct plugin config
+  block:
+  - name: Create Plugins list
+    set_fact:
+      nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+  - name: Construct plugin config
+    set_fact:
+      nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
+    with_items: "{{ nautobot__plugins }}"
+  when: nautobot__plugins is defined and nautobot__plugins|length>0
+  
+- name: Copy nautobot_config.py so it is present by new installations
+  template:
+    src: nautobot_config.py.j2
+    # dest: "{{ nautobot__config_volume_path }}/nautobot_config.py"
+    dest: "{{ nautobot__home }}/config/nautobot_config.py"
+    owner: "{{ nautobot__container_uid }}"
+    group: "{{ nautobot__container_gid }}"
+  notify: restart nautobot-stack
+
+- name: Copy uwsgi.ini
+  template:
+    src: uwsgi.ini.j2
+    dest: "{{ nautobot__home }}/config/uwsgi.ini"
+    owner: "{{ nautobot__container_uid }}"
+    group: "{{ nautobot__container_gid }}"
+  notify: restart nautobot-stack  
+
+- name: Plugins found - build custom image
+  block:
+  - name: Copy Dockerfile with plugins
+    template:
+      src: Dockerfile_LDAP.j2
+      dest: "{{ nautobot__home }}/Dockerfile"
+    register: dockerfile
+
+  - name: Build Nautobot with custom plugins
+    community.docker.docker_image:
+      name: "{{ nautobot__name }}-custom"
+      build:
+        path: "{{ nautobot__home }}"
+        nocache: true
+        pull: "{{ nautobot__pull_image | default(false) }}"
+      source: build
+      force_source: yes
+    register: docker_build
+    ignore_errors: true
+    when: dockerfile.changed
+    
+  - name: Restart Docker if build failed
+    ansible.builtin.service:
+      name: docker
+      state: restarted    
+    when: docker_build is defined and docker_build.changed
+
+  - name: Build Nautobot with custom plugins (second attempt)
+    community.docker.docker_image:
+      name: "{{ nautobot__name }}-custom"
+      build:
+        path: "{{ nautobot__home }}"
+      source: build
+    when: docker_build is defined and docker_build.changed
+
+  - name: Override image name with local Docker
+    set_fact:
+      nautobot__image: "{{ nautobot__name }}-custom"
+  when: nautobot__plugins is defined and nautobot__plugins|length>0
+
+- name: Run nautobot container frontend
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}"
+    image: "{{ nautobot__image }}"
+    restart_policy: always
+    network_mode: "{{ nautobot__network_mode }}"
+    networks: "{{ nautobot__networks }}"
+    purge_networks: "{{ nautobot__purge_networks | default('no') }}"
+    ports: "{{ nautobot__ports }}"
+    # user: nautobot:nautobot
+    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    # healthcheck:
+    #   interval: "5s"
+    #   timeout: "5s"
+    #   start_period: "5s"
+    #   retries: 3
+    #   test: ["CMD", "nautobot-server", "health_check"]
+
+- name: Run nautobot worker
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}-worker"
+    image: "{{ nautobot__image }}"
+    restart_policy: always
+    networks: 
+      - name: "{{ nautobot__network_name }}"
+    entrypoint: "nautobot-server rqworker"
+    # user: nautobot:nautobot
+    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    # healthcheck:
+    #   interval: "5s"
+    #   timeout: "5s"
+    #   start_period: "5s"
+    #   retries: 3
+    #   test: ["CMD", "nautobot-server", "health_check"]
+
+- name: Run celery worker 
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}-celery-worker"
+    image: "{{ nautobot__image }}"
+    restart_policy: always
+    networks: 
+      - name: "{{ nautobot__network_name }}"
+    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
+    entrypoint: "sh -c 'nautobot-server celery worker -l {{ nautobot__log_level }}'"
+    healthcheck:
+      interval: "5s"
+      timeout: "5s"
+      start_period: "5s"
+      retries: 3
+      test: ["CMD", "nautobot-server", "health_check"]
+    tty: true
+
+- name: Run celery beat 
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}-celery-beat"
+    image: "{{ nautobot__image }}"
+    restart_policy: always
+    networks: 
+      - name: "{{ nautobot__network_name }}"
+    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
+    entrypoint: "sh -c 'nautobot-server celery beat -l {{ nautobot__log_level }}'"
+    healthcheck:
+      interval: "5s"
+      timeout: "5s"
+      start_period: "5s"
+      retries: 3
+      test: ["CMD", "nautobot-server", "health_check"]
+    tty: true
+
+- name: Construct plugin config
+  block:
+  - name: Create Plugins list
+    set_fact:
+      nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+  - name: Construct plugin config
+    set_fact:
+      nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
+    with_items: "{{ nautobot__plugins }}"
+  when: nautobot__plugins is defined and nautobot__plugins|length>0
+  
+# - name: Copy uWSGI
+#   template:
+#     src: "uwsgi.ini.j2"
+#     dest: ""{{ nautobot__config_volume_path }}/conf/uwsgi.ini"
+    # owner: "{{ nautobot__container_uid }}"
+    # group: "{{ nautobot__container_gid }}"
+#     mode: 0600
+#   notify: restart nautobot
