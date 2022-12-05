@@ -16,14 +16,14 @@
   - name: Remove Redis
     docker_container:
       name: "{{ nautobot__name }}-redis"
-      state: absent                  
+      state: absent
   - name: Remove db
     docker_container:
       name: "{{ nautobot__name }}-db"
       state: absent
     when: nautobot__install_own_postgres_db
   when: nautobot__remove_existing_container
-  
+
 - name: Create a network for nautobot
   community.docker.docker_network:
     name: "{{ nautobot__network_name }}"
@@ -62,7 +62,7 @@
     name: "{{ nautobot__postgres_name }}"
     image: "{{ nautobot__postgres_image }}"
     restart_policy: always
-    networks: 
+    networks:
       - name: "{{ nautobot__network_name }}"
     purge_networks: "{{ nautobot__purge_networks | default('no') }}"
     env: "{{ nautobot__postgres_env | combine(nautobot__postgres_user_env) }}"
@@ -70,7 +70,7 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
   when: nautobot__install_own_postgres_db
-  
+
 - name: Run nautobot Redis
   community.docker.docker_container:
     name: "{{ nautobot__name }}-redis"
@@ -78,7 +78,7 @@
     pull: "{{ nautobot__pull_image }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
-    networks: 
+    networks:
       - name: "{{ nautobot__network_name }}"
     purge_networks: "{{ nautobot__purge_networks | default('no') }}"
     env: "{{ nautobot__redis_env }}"
@@ -91,7 +91,7 @@
     name: redis-tools
     state: present
   when: nautobot__install_redis_client_tools
-  
+
 - name: Create directories Dockerfile
   file:
     state: directory
@@ -111,7 +111,7 @@
       nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
     with_items: "{{ nautobot__plugins }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
-  
+
 - name: Copy nautobot_config.py so it is present by new installations
   template:
     src: nautobot_config.py.j2
@@ -127,7 +127,7 @@
     dest: "{{ nautobot__home }}/config/uwsgi.ini"
     owner: "{{ nautobot__container_uid }}"
     group: "{{ nautobot__container_gid }}"
-  notify: restart nautobot-stack  
+  notify: restart nautobot-stack
 
 - name: Plugins found - build custom image
   block:
@@ -149,11 +149,11 @@
     register: docker_build
     ignore_errors: true
     when: dockerfile.changed
-    
+
   - name: Restart Docker if build failed
     ansible.builtin.service:
       name: docker
-      state: restarted    
+      state: restarted
     when: docker_build is defined and docker_build.changed
 
   - name: Build Nautobot with custom plugins (second attempt)
@@ -172,7 +172,7 @@
 - name: Run nautobot container frontend
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
-    image: "{{ nautobot__image }}"
+    image: "{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"
@@ -195,7 +195,7 @@
     name: "{{ nautobot__name }}-worker"
     image: "{{ nautobot__image }}"
     restart_policy: always
-    networks: 
+    networks:
       - name: "{{ nautobot__network_name }}"
     entrypoint: "nautobot-server rqworker"
     # user: nautobot:nautobot
@@ -210,12 +210,12 @@
     #   retries: 3
     #   test: ["CMD", "nautobot-server", "health_check"]
 
-- name: Run celery worker 
+- name: Run celery worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-worker"
     image: "{{ nautobot__image }}"
     restart_policy: always
-    networks: 
+    networks:
       - name: "{{ nautobot__network_name }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
@@ -230,12 +230,12 @@
       test: ["CMD", "nautobot-server", "health_check"]
     tty: true
 
-- name: Run celery beat 
+- name: Run celery beat
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-beat"
     image: "{{ nautobot__image }}"
     restart_policy: always
-    networks: 
+    networks:
       - name: "{{ nautobot__network_name }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
@@ -260,7 +260,7 @@
       nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
     with_items: "{{ nautobot__plugins }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
-  
+
 # - name: Copy uWSGI
 #   template:
 #     src: "uwsgi.ini.j2"
