@@ -106,6 +106,7 @@
   - name: Create Plugins list
     set_fact:
       nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+
   - name: Construct plugin config
     set_fact:
       nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
@@ -139,7 +140,7 @@
 
   - name: Build Nautobot with custom plugins
     community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] }}"
+      name: "{{ nautobot__name }}-custom"
       build:
         path: "{{ nautobot__home }}"
         nocache: true
@@ -158,7 +159,7 @@
 
   - name: Build Nautobot with custom plugins (second attempt)
     community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] }}"
+      name: "{{ nautobot__name }}-custom"
       build:
         path: "{{ nautobot__home }}"
       source: build
@@ -166,7 +167,7 @@
 
   - name: Override image name with local Docker
     set_fact:
-      nautobot__image: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] }}"
+      nautobot__image: "{{ nautobot__name }}-custom"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
 - name: Set Docker Hub image

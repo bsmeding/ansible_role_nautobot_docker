@@ -13,7 +13,7 @@ https://docs.nautobot.com/projects/core/en/v1.0.0/models/extras/configcontext/
 Install Nautobot docker
 =======================
 
-Example playbook to install Nautobot on clean Ubununt
+Example playbook to install Nautobot on Docker container
 
 Basic install: (Create/ use an inventory with group nautobot or change hosts)
 
@@ -39,24 +39,44 @@ Run playbook to install Docker and Nautobot
   hosts: [nautobot]
   gather_facts: true
   become: yes
+  tasks:
+    - name: Check if docker is installed
+      include_role:
+        name: bsmeding.docker
+
+    - name: Check if nautobot is installed
+      include_role:
+        name: bsmeding.nautobot_docker
+
+```
+After succesfull installation, Nautobot runs on port 8080 (default), login is admin/admin
+
+To change the superuser login and or ports: (see all possible variables in ./defaults/main.yml)
+
+```
+---
+- name: Install Nautobot
+  hosts: [nautobot]
+  gather_facts: true
+  become: yes
   vars:
-    nautobot__remove_existing_container: false
     nautobot__superuser_name: admin
-    nautobot__superuser_password: admin
+    nautobot__superuser_password: mysupersecretpassword
+    nautobot__port_http: 8888
     nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz0987"
     nautobot__napalm_username: cisco
     nautobot__napalm_password: cisco    
   tasks:
-    - name: Check if nautobot is installed
+    - name: Check if docker is installed
       include_role:
-        name: bsmeding_docker
+        name: bsmeding.docker
 
     - name: Check if nautobot is installed
       include_role:
-        name: docker_nautobot
+        name: bsmeding.nautobot_docker
+
 
 ```
-
 
 
 Manual config tasks
@@ -197,3 +217,10 @@ junipernetworks.junos.junos
 {% else %}
 {% endif %}
 ```
+
+
+# TODO
+
+* Add variables to readme
+* Variable more the nautobot_config.py, now there are a lot of static config lines
+* add uwsgi template to variables

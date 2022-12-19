@@ -1,7 +1,7 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:1.4.7
+nautobot__image: nautobot:1.5
 nautobot__image_python_version: '3.9'
 nautobot__port_http: 8080
 nautobot__port_https: 8444
