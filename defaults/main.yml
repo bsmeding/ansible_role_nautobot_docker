@@ -17,13 +17,16 @@ nautobot__ldap_search_users: "ou=people,dc=example,dc=com"
 nautobot__ldap_search_groups: "ou=groups,dc=example,dc=com"
 nautobot__ldap_auth_bind_dn: "CN=readonly,OU=people,DC=example,DC=com"
 nautobot__ldap_auth_bind_pass: "readonly"
+nautobot__ldap_mirror_groups: true
+nautobot__ldap_find_group_perms: true
+nautobot__ldap_cache_groups: true
 nautobot__install_own_postgres_db: true
 nautobot__postgres_name: nautobot-db
 nautobot__postgres_image: postgres:14
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
 nautobot__redis_password: nautobotredispassw
-nautobot__install_worker: false
+nautobot__install_worker: false # Only for version before 1.1
 nautobot__install_redis_client_tools: false
 nautobot__container_uid: 999 # Do not change
 nautobot__container_gid: 999 # Do not change

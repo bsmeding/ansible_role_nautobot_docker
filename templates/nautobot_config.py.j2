@@ -144,9 +144,9 @@ AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 #AUTH_LDAP_GROUP_TYPE = NestedGroupOfNamesType()
 
 
-AUTH_LDAP_MIRROR_GROUPS = True
-AUTH_LDAP_FIND_GROUP_PERMS = True
-AUTH_LDAP_CACHE_GROUPS = True
+AUTH_LDAP_MIRROR_GROUPS = {{ nautobot__ldap_mirror_groups | capitalize}}
+AUTH_LDAP_FIND_GROUP_PERMS = {{ nautobot__ldap_find_group_perms | capitalize}}
+AUTH_LDAP_CACHE_GROUPS = {{ nautobot__ldap_cache_groups | capitalize}}
 
 # Define a group required to login
 #AUTH_LDAP_REQUIRE_GROUP = "cn=nautobot,{{ nautobot__ldap_search_groups }}"
@@ -404,7 +404,7 @@ LOGGING = {
             "filename": f"{LOG_DIR}/django-ldap-debug.log",
             "maxBytes": 1024 * 500,
             "backupCount": 5,
-        },        
+        },
     },
     "loggers": {
 
@@ -419,7 +419,7 @@ LOGGING = {
         "rq.worker": {
             "handlers": ["nautobot_log"],
             "level": LOG_LEVEL,
-        },        
+        },
         'django_auth_ldap': {
             'handlers': ['nautobot_auth_log'],
             'level': LOG_LEVEL,
@@ -440,7 +440,7 @@ PLUGINS = {{ nautobot__plugins_list }}
 #         'foo': 'bar',
 #         'buzz': 'bazz'
 #     }
-# 
+#
 PLUGINS_CONFIG = {{ nautobot__plugin_config |to_nice_json | replace('true','True') | replace('false','False')  | replace('"None"','None') }}
 
 {% endif %}
