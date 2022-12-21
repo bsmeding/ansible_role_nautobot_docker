@@ -17,7 +17,7 @@ nautobot__ldap_search_users: "ou=people,dc=example,dc=com"
 nautobot__ldap_search_groups: "ou=groups,dc=example,dc=com"
 nautobot__ldap_auth_bind_dn: "CN=readonly,OU=people,DC=example,DC=com"
 nautobot__ldap_auth_bind_pass: "readonly"
-nautobot__ldap_mirror_groups: true
+nautobot__ldap_mirror_groups: false # Mirror ALL LDAP groups
 nautobot__ldap_find_group_perms: true
 nautobot__ldap_cache_groups: true
 nautobot__install_own_postgres_db: true
