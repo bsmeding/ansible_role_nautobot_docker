@@ -203,7 +203,8 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
-    entrypoint: "nautobot-server rqworker"
+    command: "nautobot-server rqworker"
+    command_handling: "compatibility"
     # user: nautobot:nautobot
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
@@ -228,7 +229,8 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    entrypoint: "sh -c 'nautobot-server celery worker -l {{ nautobot__log_level }}'"
+    command: "sh -c 'nautobot-server celery worker -l {{ nautobot__log_level }}'"
+    command_handling: "compatibility"
     healthcheck:
       interval: "5s"
       timeout: "5s"
@@ -248,7 +250,8 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    entrypoint: "sh -c 'nautobot-server celery beat -l {{ nautobot__log_level }}'"
+    command: "sh -c 'nautobot-server celery beat -l {{ nautobot__log_level }}'"
+    command_handling: "compatibility"
     healthcheck:
       interval: "5s"
       timeout: "5s"
