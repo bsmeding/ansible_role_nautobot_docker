@@ -1,7 +1,9 @@
 Nautobot
 ========
 
-This Role will include the docker role, depends on the docker role to prepare the servers. That docker role relay on the [geerlingguy.docker role](https://github.com/geerlingguy/ansible-role-docker) to prepare the OS and install Docker on OS level.
+Nautobot is an network CMDB tool created for and by network automation specialist from NetworkToCode. It is an fork from Netbox (2.x) and added with a lot af nice features to create a Single Source of Trouth for your automation platform.
+
+This role will install Nautobot as docker container. If you need docker aswell, so you can build the whole application at once please consider the Ansible role `bsmeding.docker` that will prepare you're server and install docker.
 
 
 Git as Data Source
@@ -190,14 +192,14 @@ query ($device_id: ID!) {
 
 
 # Error handling
-When the stack doesnt start after a hard shutdown (nog containers shutdown but VM is hard shutdown) is it possible that Redis file is corrupt. You see the message `Bad file format reading the append only file appendonly.aof.1.incr.aof: make a backup of your AOF file, then use ./redis-check-aof --fix <filename.manifest>`
+When the stack doesn't start after a hard shutdown of the VM (no containers shutdown but VM is hard shutdown) is it possible that Redis file is corrupt. You see the message `Bad file format reading the append only file appendonly.aof.1.incr.aof: make a backup of your AOF file, then use ./redis-check-aof --fix <filename.manifest>`
 Then find the Docker path (`docker inspect nautobot-redis`) and go to this folder
 Run the check command `sudo redis-check-aof --fix appendonly.aof.1.incr.aof`
 
 # computed fields
 
 ## Ansible slug
-To set correct ansible vnedor plugin, add a computed field, named: `Ansible Network OS` type `dcim|platform` and slug: `ansible_network_os`
+To set correct ansible vendor plugin, add a computed field, named: `Ansible Network OS` type `dcim|platform` and slug: `ansible_network_os`
 content:
 ```
 {% if obj.slug == 'arista_eos' %}
