@@ -132,6 +132,12 @@
 
 - name: Plugins found - build custom image
   block:
+  - name: Check if image exists
+    community.docker.docker_image_info:
+      name:
+        - "{{ nautobot__name }}-custom"
+    register: result_local_image
+
   - name: Copy Dockerfile with plugins
     template:
       src: Dockerfile_LDAP.j2
@@ -145,11 +151,14 @@
         path: "{{ nautobot__home }}"
         nocache: true
         pull: "{{ nautobot__pull_image | default(false) }}"
+        args:
+          http_proxy: "{{ http_proxy | default('') }}"
+          https_proxy: "{{ https_proxy | default('') }}"
       source: build
       force_source: yes
     register: docker_build
     ignore_errors: true
-    when: dockerfile.changed
+    when: dockerfile.changed or result_local_image.images | length <1
 
   - name: Restart Docker if build failed
     ansible.builtin.service:
@@ -162,6 +171,9 @@
       name: "{{ nautobot__name }}-custom"
       build:
         path: "{{ nautobot__home }}"
+        args:
+          http_proxy: "{{ http_proxy | default('') }}"
+          https_proxy: "{{ https_proxy | default('') }}"        
       source: build
     when: docker_build is defined and docker_build.changed
 
