@@ -128,13 +128,13 @@ AUTH_LDAP_USER_DN_TEMPLATE = "{{ nautobot__ldap_search_users_dn_template }}"
 
 
 # You can map user attributes to Django attributes as so.
-AUTH_LDAP_USER_ATTR_MAP = "{{ nautobot__ldap_search_users_attribute_map }}"
+AUTH_LDAP_USER_ATTR_MAP = {{ nautobot__ldap_search_users_attribute_map }}
 
 # GROUPS
 #AUTH_LDAP_GROUP_SEARCH = LDAPSearch("dc=example,dc=com", ldap.SCOPE_SUBTREE,"(objectClass=group)")
 #AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
 AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_group_search }}", ldap.SCOPE_SUBTREE, "(objectClass={{ nautobot__ldap_group_search_objectClass }})")
-AUTH_LDAP_GROUP_TYPE = "{{ nautobot__ldap_group_search_group_type }}"
+AUTH_LDAP_GROUP_TYPE = {{ nautobot__ldap_group_search_group_type }}
 
 AUTH_LDAP_MIRROR_GROUPS = {{ nautobot__ldap_mirror_groups | capitalize}}
 AUTH_LDAP_FIND_GROUP_PERMS = {{ nautobot__ldap_find_group_perms | capitalize}}
@@ -142,24 +142,21 @@ AUTH_LDAP_CACHE_GROUPS = {{ nautobot__ldap_cache_groups | capitalize}}
 
 {% if nautobot__ldap_require_group is defined and nautobot__ldap_require_group|length>5 %}
 # Define a group required to login
-AUTH_LDAP_REQUIRE_GROUP = "{{ nautobot__ldap_require_group }}"
+AUTH_LDAP_REQUIRE_GROUP = {{ nautobot__ldap_require_group }}
 {% endif %}
 
 # Define special user types using groups. Exercise great caution when assigning superuser status.
 {% if nautobot__ldap_is_active_group is defined or nautobot__ldap_staff_group is defined or nautobot__ldap_superuser_group is defined %}
-nautobot__ldap_staff_group: ''
-nautobot__ldap_superuser_group: ''
-
 AUTH_LDAP_USER_FLAGS_BY_GROUP = {
 {% if nautobot__ldap_is_active_group is defined and nautobot__ldap_is_active_group|length>5 %}
-    "is_active":    "cn=nautobot,{{ nautobot__ldap_group_search }}",
+    "is_active":    ["{{ nautobot__ldap_is_active_group }}"],
 {% endif %}
 {% if nautobot__ldap_staff_group is defined and nautobot__ldap_staff_group|length>5 %}
-    "is_staff":     "{{ nautobot__ldap_staff_group }}",
-{% endif %}
+    "is_staff":     ["{{ nautobot__ldap_staff_group }}"],
+{% endif -%}
 {% if nautobot__ldap_superuser_group is defined and nautobot__ldap_superuser_group|length>5 %}    
-    "is_superuser": "{{ nautobot__ldap_superuser_group }}",
-{% endif %}    
+    "is_superuser": ["{{ nautobot__ldap_superuser_group }}"],
+{% endif -%}    
 }
 {% endif %}
 
