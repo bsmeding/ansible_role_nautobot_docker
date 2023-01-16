@@ -142,7 +142,7 @@ AUTH_LDAP_CACHE_GROUPS = {{ nautobot__ldap_cache_groups | capitalize}}
 
 {% if nautobot__ldap_require_group is defined and nautobot__ldap_require_group|length>5 %}
 # Define a group required to login
-AUTH_LDAP_REQUIRE_GROUP = {{ nautobot__ldap_require_group }}
+AUTH_LDAP_REQUIRE_GROUP = "{{ nautobot__ldap_require_group }}"
 {% endif %}
 
 # Define special user types using groups. Exercise great caution when assigning superuser status.
