@@ -65,7 +65,7 @@ CACHEOPS_REDIS = os.getenv("NAUTOBOT_CACHEOPS_REDIS", f"{redis_protocol}://:{cac
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"{{redis_protocol}}://:{{cache_ops_pwd}}@{{cache_ops_host}}:{{cache_ops_port}}/0",
+        "LOCATION": f"{redis_protocol}://:{cache_ops_pwd}@{cache_ops_host}:{cache_ops_port}/0",
         "TIMEOUT": 300,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
