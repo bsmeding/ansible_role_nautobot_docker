@@ -13,10 +13,23 @@ nautobot__napalm_username: cisco
 nautobot__napalm_password: cisco
 nautobot__ldap_auth_server_ip: ''
 nautobot__ldap_auth_server_port: 389
-nautobot__ldap_search_users: "ou=people,dc=example,dc=com"
-nautobot__ldap_search_groups: "ou=groups,dc=example,dc=com"
 nautobot__ldap_auth_bind_dn: "CN=readonly,OU=people,DC=example,DC=com"
 nautobot__ldap_auth_bind_pass: "readonly"
+nautobot__ldap_search_users: "ou=people,dc=example,dc=com"
+nautobot__ldap_search_uid: sAMAccountName=%(user)s    # uid=%(user)s    # &(objectClass=user)(sAMAccountName=%(user)s)
+nautobot__ldap_search_users_dn_template: ''
+nautobot__ldap_search_users_attribute_map: {
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail"
+  }
+nautobot__ldap_group_search: "ou=groups,dc=example,dc=com"
+nautobot__ldap_group_search_objectClass: "groupOfNames"
+nautobot__ldap_group_search_group_type: "GroupOfNamesType()"
+nautobot__ldap_require_group: ''
+nautobot__ldap_is_active_group: ''
+nautobot__ldap_staff_group: ''
+nautobot__ldap_superuser_group: ''
 nautobot__ldap_mirror_groups: false # Mirror ALL LDAP groups
 nautobot__ldap_find_group_perms: true
 nautobot__ldap_cache_groups: true

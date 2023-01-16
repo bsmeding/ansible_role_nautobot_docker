@@ -65,7 +65,7 @@ CACHEOPS_REDIS = os.getenv("NAUTOBOT_CACHEOPS_REDIS", f"{redis_protocol}://:{cac
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f"{redis_protocol}://:{cache_ops_pwd}@{cache_ops_host}:{cache_ops_port}/0",
+        "LOCATION": f"{{redis_protocol}}://:{{cache_ops_pwd}}@{{cache_ops_host}}:{{cache_ops_port}}/0",
         "TIMEOUT": 300,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -109,55 +109,59 @@ AUTH_LDAP_BIND_AS_AUTHENTICATING_USER = True # Needed for authenticated user gro
 # Include this `ldap.set_option` call if you want to ignore certificate errors. This might be needed to accept a self-signed cert.
 ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
 
-from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType
+from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType, NestedGroupOfNamesType, NestedActiveDirectoryGroupType
 
 # This search matches users with the sAMAccountName equal to the provided username. This is required if the user's
 # username is not in their DN (Active Directory).
 AUTH_LDAP_USER_SEARCH = LDAPSearch("{{ nautobot__ldap_search_users }}",
                                     ldap.SCOPE_SUBTREE,
-                                    "(sAMAccountName=%(user)s)")
+                                    "({{ nautobot__ldap_search_uid }})")
 
 #AUTH_LDAP_USER_SEARCH = LDAPSearch(
 #    "{{ nautobot__ldap_search_users }}", ldap.SCOPE_SUBTREE, "(uid=%(user)s)"
 #)
 
-
+{% if nautobot__ldap_search_users_dn_template is defined and nautobot__ldap_search_users_dn_template|length>5 %}
 # If a user's DN is producible from their username, we don't need to search.
-AUTH_LDAP_USER_DN_TEMPLATE = "uid=%(user)s,{{ nautobot__ldap_search_users }}"
+AUTH_LDAP_USER_DN_TEMPLATE = "{{ nautobot__ldap_search_users_dn_template }}"
+{% endif %}
+
 
 # You can map user attributes to Django attributes as so.
-AUTH_LDAP_USER_ATTR_MAP = {
-    "first_name": "givenName",
-    "last_name": "sn",
-    "email": "mail"
-}
+AUTH_LDAP_USER_ATTR_MAP = "{{ nautobot__ldap_search_users_attribute_map }}"
 
 # GROUPS
-# With Microsoft AD use NestedGroupOfNamesType (also in GROUP_TYPE)
-##from django_auth_ldap.config import LDAPSearch, NestedGroupOfNamesType
 #AUTH_LDAP_GROUP_SEARCH = LDAPSearch("dc=example,dc=com", ldap.SCOPE_SUBTREE,"(objectClass=group)")
 #AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_search_groups }}", ldap.SCOPE_SUBTREE, "(objectClass=groupOfNames)")
-AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
-
-# For Microsoft AD:
-#AUTH_LDAP_GROUP_TYPE = NestedGroupOfNamesType()
-
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_group_search }}", ldap.SCOPE_SUBTREE, "(objectClass={{ nautobot__ldap_group_search_objectClass }})")
+AUTH_LDAP_GROUP_TYPE = "{{ nautobot__ldap_group_search_group_type }}"
 
 AUTH_LDAP_MIRROR_GROUPS = {{ nautobot__ldap_mirror_groups | capitalize}}
 AUTH_LDAP_FIND_GROUP_PERMS = {{ nautobot__ldap_find_group_perms | capitalize}}
 AUTH_LDAP_CACHE_GROUPS = {{ nautobot__ldap_cache_groups | capitalize}}
 
+{% if nautobot__ldap_require_group is defined and nautobot__ldap_require_group|length>5 %}
 # Define a group required to login
-#AUTH_LDAP_REQUIRE_GROUP = "cn=nautobot,{{ nautobot__ldap_search_groups }}"
+AUTH_LDAP_REQUIRE_GROUP = "{{ nautobot__ldap_require_group }}"
+{% endif %}
 
 # Define special user types using groups. Exercise great caution when assigning superuser status.
-#AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-#    "is_active":    "cn=nautobot,{{ nautobot__ldap_search_groups }}",
-#    "is_staff":     "cn=nautobot_staff,{{ nautobot__ldap_search_groups }}",
-#    "is_superuser": "cn=lldap_admin,{{ nautobot__ldap_search_groups }}",
-#}
+{% if nautobot__ldap_is_active_group is defined or nautobot__ldap_staff_group is defined or nautobot__ldap_superuser_group is defined %}
+nautobot__ldap_staff_group: ''
+nautobot__ldap_superuser_group: ''
 
+AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+{% if nautobot__ldap_is_active_group is defined and nautobot__ldap_is_active_group|length>5 %}
+    "is_active":    "cn=nautobot,{{ nautobot__ldap_group_search }}",
+{% endif %}
+{% if nautobot__ldap_staff_group is defined and nautobot__ldap_staff_group|length>5 %}
+    "is_staff":     "{{ nautobot__ldap_staff_group }}",
+{% endif %}
+{% if nautobot__ldap_superuser_group is defined and nautobot__ldap_superuser_group|length>5 %}    
+    "is_superuser": "{{ nautobot__ldap_superuser_group }}",
+{% endif %}    
+}
+{% endif %}
 
 AUTH_LDAP_GROUP_CACHE_TIMEOUT = 3600
 
@@ -166,9 +170,6 @@ AUTH_LDAP_GROUP_CACHE_TIMEOUT = 3600
 ###
 ### # Don't check the cert at all
 ### ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-
-
-
 
 
 
