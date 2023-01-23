@@ -97,7 +97,7 @@
     state: directory
     path: "{{ nautobot__home }}"
     recurse: true
-    mode: "0755"
+    mode: "0760"
     owner: "{{ nautobot__container_uid | default(docker_uid) | default('root') }}"
     group: "{{ nautobot__container_gid | default(docker_gid) | default('root') }}"
 
@@ -120,6 +120,7 @@
     dest: "{{ nautobot__home }}/config/nautobot_config.py"
     owner: "{{ nautobot__container_uid }}"
     group: "{{ nautobot__container_gid }}"
+    mode: "0760"
   notify: restart nautobot-stack
 
 - name: Copy uwsgi.ini
@@ -128,6 +129,7 @@
     dest: "{{ nautobot__home }}/config/uwsgi.ini"
     owner: "{{ nautobot__container_uid }}"
     group: "{{ nautobot__container_gid }}"
+    mode: "0760"
   notify: restart nautobot-stack
 
 - name: Plugins found - build custom image
@@ -142,6 +144,9 @@
     template:
       src: Dockerfile_LDAP.j2
       dest: "{{ nautobot__home }}/Dockerfile"
+      owner: "{{ nautobot__container_uid }}"
+      group: "{{ nautobot__container_gid }}"
+      mode: "0760"
     register: dockerfile
 
   - name: Build Nautobot with custom plugins
@@ -196,17 +201,17 @@
     networks: "{{ nautobot__networks }}"
     purge_networks: "{{ nautobot__purge_networks | default('no') }}"
     ports: "{{ nautobot__ports }}"
-    # user: nautobot:nautobot
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
-    # healthcheck:
-    #   interval: "5s"
-    #   timeout: "5s"
-    #   start_period: "5s"
-    #   retries: 3
-    #   test: ["CMD", "nautobot-server", "health_check"]
+    healthcheck:
+      interval: "5s"
+      timeout: "5s"
+      start_period: "5s"
+      retries: 3
+      test: ["CMD", "nautobot-server", "health_check"]
 
 - name: Run nautobot worker
   community.docker.docker_container:
@@ -217,17 +222,17 @@
       - name: "{{ nautobot__network_name }}"
     command: "nautobot-server rqworker"
     command_handling: "compatibility"
-    # user: nautobot:nautobot
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
-    # healthcheck:
-    #   interval: "5s"
-    #   timeout: "5s"
-    #   start_period: "5s"
-    #   retries: 3
-    #   test: ["CMD", "nautobot-server", "health_check"]
+    healthcheck:
+      interval: "5s"
+      timeout: "5s"
+      start_period: "5s"
+      retries: 3
+      test: ["CMD", "nautobot-server", "health_check"]
   when: nautobot__install_worker| bool
 
 - name: Run celery worker
@@ -237,19 +242,14 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"      
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    command: "sh -c 'nautobot-server celery worker -l {{ nautobot__log_level }}'"
-    command_handling: "compatibility"
-    healthcheck:
-      interval: "5s"
-      timeout: "5s"
-      start_period: "5s"
-      retries: 3
-      test: ["CMD", "nautobot-server", "health_check"]
-    tty: true
+    command: "nautobot-server celery worker -l {{ nautobot__log_level }}"
+    # command_handling: "compatibility"
+    # tty: true
 
 - name: Run celery beat
   community.docker.docker_container:
@@ -258,19 +258,14 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"      
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    command: "sh -c 'nautobot-server celery beat -l {{ nautobot__log_level }}'"
-    command_handling: "compatibility"
-    healthcheck:
-      interval: "5s"
-      timeout: "5s"
-      start_period: "5s"
-      retries: 3
-      test: ["CMD", "nautobot-server", "health_check"]
-    tty: true
+    command: "nautobot-server celery beat -l {{ nautobot__log_level }}"
+    #  command_handling: "compatibility"
+    # tty: true
 
 - name: Construct plugin config
   block:

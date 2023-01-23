@@ -220,6 +220,88 @@ junipernetworks.junos.junos
 {% endif %}
 ```
 
+# Install plugins
+To install plugins, set the variable `nautobot__plugins` with the desired plugins to install, example: 
+
+```
+nautobot__plugins:
+  - plugin_name: nautobot_device_onboarding
+    plugin_config: {
+          "nautobot_device_onboarding": {
+            "default_ip_status": "Active",
+            "default_device_role": "onboarding",
+            "skip_device_type_on_update": True,
+          }
+        }
+  - plugin_name: nautobot-ssot
+    plugin_config: {}
+  - plugin_name: nautobot-plugin-nornir
+    plugin_config: {
+      "nautobot_plugin_nornir": {
+        "use_config_context": {"secrets": False, "connection_options": True},
+        # Optionally set global connection options.
+        "connection_options": {
+            "napalm": {
+                "extras": {
+                    "optional_args": {"global_delay_factor": 1},
+                },
+            },
+            "netmiko": {
+                "extras": {
+                    "global_delay_factor": 1,
+                },
+            },
+        },
+        "nornir_settings": {
+            "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
+            "runner": {
+                "plugin": "threaded",
+                "options": {
+                    "num_workers": 20,
+                },
+            },
+        },
+      }
+    }
+  - plugin_name: nautobot-golden-config
+    plugin_config: {
+        "nautobot_golden_config": {
+          "per_feature_bar_width": 0.15,
+          "per_feature_width": 13,
+          "per_feature_height": 4,
+          "enable_backup": False,
+          "enable_compliance": False,
+          "enable_intended": True,
+          "enable_sotagg": True,
+          "sot_agg_transposer": None,
+          "enable_postprocessing": False,
+          "postprocessing_callables": [],
+          "postprocessing_subscribed": [],
+          "platform_slug_map": None,
+          # "get_custom_compliance": "my.custom_compliance.func"
+        }
+    }
+  - plugin_name: nautobot-device-lifecycle-mgmt
+    plugin_config: {
+        "nautobot_device_lifecycle_mgmt": {
+            "barchart_bar_width": float(0.1)),
+            "barchart_width": int(12),
+            "barchart_height": int(5),
+        }
+    }
+  - plugin_name: nautobot-firewall-models
+    plugin_config: {
+        "nautobot_firewall_models": {
+            "default_status": "active"
+        }
+    }
+  - plugin_name: nautobot-ssot
+    plugin_config: {
+        "nautobot_ssot": {
+            "hide_example_jobs": True,
+        }
+  }
+```
 
 # TODO
 
