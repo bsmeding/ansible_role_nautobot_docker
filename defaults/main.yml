@@ -41,8 +41,8 @@ nautobot__postgres_password: nautobotdbpassword
 nautobot__redis_password: nautobotredispassw
 nautobot__install_worker: false # Only for version before 1.1
 nautobot__install_redis_client_tools: false
-nautobot__container_uid: root # 999 # Use 999 for internal ID of nautobot user in the container (less secure)
-nautobot__container_gid: 999 # Use 999 for internal ID of nautobot user in the container (less secure)
+nautobot__container_uid: 999 # Use 999 for internal ID of nautobot user in the container
+nautobot__container_gid: 999 # Use 999 for internal ID of nautobot user in the container
 nautobot__allowed_hosts: '*'
 nautobot__remove_existing_container: false # DO NOT USE WHEN RUNNING PRODUCTION
 nautobot__banner_login: 'nautobot demo use admin, admin to login'
@@ -65,19 +65,19 @@ nautobot__directories:
 - path: "{{ nautobot__home }}"
   mode: "0760"
   owner: root
-  group: root
+  group: 999 # 999 is needed for nautobot group in the container
 - path: "{{ nautobot__home }}/config"
   mode: "0760"
-  owner: "{{ nautobot__container_uid }}"
-  group: "{{ nautobot__container_uid }}"
+  owner: root
+  group: 999 # 999 is needed for nautobot group in the container
 - path: "{{ nautobot__home }}/logs"
   mode: "0760"
-  owner: "{{ nautobot__container_uid }}"
-  group: "{{ nautobot__container_uid }}"
+  owner: root
+  group: 999 # 999 is needed for nautobot group in the container
 - path: "{{ nautobot__home }}/media"
   mode: "0760"
-  owner: "{{ nautobot__container_uid }}"
-  group: "{{ nautobot__container_uid }}"
+  owner: root
+  group: 999 # 999 is needed for nautobot group in the container
 nautobot__db_volume_name: "nautobot_db"
 nautobot__ports:
 - "{{ nautobot__port_http }}:8080"
@@ -87,7 +87,7 @@ nautobot__directory_volumes:
 - "{{ nautobot__home }}/logs:/var/log/nautobot"
 - "{{ nautobot__home }}/media:/opt/nautobot/media"
 # - "{{ nautobot__home }}/static:/opt/nautobot/static"
-# - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
+# - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs" # Please use jobs with Gitlab sync, not local on the server
 nautobot__file_volumes: []
 nautobot__postgres_directory_volumes:
 - "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"
