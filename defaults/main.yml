@@ -7,7 +7,7 @@ nautobot__port_http: 8080
 nautobot__port_https: 8444
 nautobot__superuser_name: admin
 nautobot__superuser_password: admin
-nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz0987654" # Max 40 char
+nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz" # Max 40 char
 nautobot__secret_key: 012345678901234567890123456789012345678901234567890123456789
 nautobot__napalm_username: cisco
 nautobot__napalm_password: cisco
