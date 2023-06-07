@@ -11,6 +11,12 @@ nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz" # Max 40 c
 nautobot__secret_key: 012345678901234567890123456789012345678901234567890123456789
 nautobot__napalm_username: cisco
 nautobot__napalm_password: cisco
+nautobot__install_own_postgres_db: true
+nautobot__postgres_name: nautobot-db
+nautobot__postgres_image: postgres:14
+nautobot__postgres_user: nautobotdbuser
+nautobot__postgres_password: nautobotdbpassword
+nautobot__redis_password: nautobotredispassw
 nautobot__ldap_auth_server_ip: ''
 nautobot__ldap_auth_server_port: 389
 nautobot__ldap_auth_bind_dn: "CN=readonly,OU=people,DC=example,DC=com"
@@ -33,12 +39,6 @@ nautobot__ldap_superuser_group: ''
 nautobot__ldap_mirror_groups: false # Mirror ALL LDAP groups
 nautobot__ldap_find_group_perms: true
 nautobot__ldap_cache_groups: true
-nautobot__install_own_postgres_db: true
-nautobot__postgres_name: nautobot-db
-nautobot__postgres_image: postgres:14
-nautobot__postgres_user: nautobotdbuser
-nautobot__postgres_password: nautobotdbpassword
-nautobot__redis_password: nautobotredispassw
 nautobot__install_worker: false # Only for version before 1.1
 nautobot__install_redis_client_tools: false
 nautobot__container_uid: 999 # Use 999 for internal ID of nautobot user in the container
@@ -48,7 +48,7 @@ nautobot__remove_existing_container: false # DO NOT USE WHEN RUNNING PRODUCTION
 nautobot__banner_login: 'nautobot demo use admin, admin to login'
 nautobot__banner_bottom: 'Use for demo only'
 nautobot__pull_image: true
-nautobot__log_level: 'DEBUG' # DEBUG  'INFO'    'WARNING'
+nautobot__log_level: 'WARNING' # DEBUG  'INFO'    'WARNING'
 nautobot__network_mode:
 nautobot__network_name: nautobot
 nautobot__network_cidr: 172.16.20.0/26

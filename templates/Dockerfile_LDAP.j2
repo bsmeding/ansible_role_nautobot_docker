@@ -7,6 +7,9 @@ FROM networktocode/${NAUTOBOT_IMAGE}-py${PYTHON_VER} as base
 USER 0
 RUN apt-get update -y && apt-get install -y libldap2-dev libsasl2-dev libssl-dev
 
+# Root install SAML dependencies
+RUN apt-get update -y && apt-get install -y llibxmlsec1-dev libxmlsec1-openssl pkg-config
+
 # ---------------------------------
 # Stage: Builder
 # ---------------------------------
@@ -19,6 +22,7 @@ RUN apt-get install -y gcc && \
 
 RUN pip3 install --upgrade pip wheel && pip3 install django-auth-ldap
 RUN pip3 install --upgrade nautobot[napalm]
+RUN pip3 install --upgrade nautobot[sso]
 
 {% if nautobot__plugins is defined %}
 RUN pip3 install --upgrade nornir-nautobot
