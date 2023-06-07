@@ -23,6 +23,7 @@ RUN apt-get install -y gcc && \
 RUN pip3 install --upgrade pip wheel && pip3 install django-auth-ldap
 RUN pip3 install --upgrade nautobot[napalm]
 RUN pip3 install --upgrade nautobot[sso]
+RUN pip3 install --upgrade social-auth-core[openidconnect]
 
 {% if nautobot__plugins is defined %}
 RUN pip3 install --upgrade nornir-nautobot
