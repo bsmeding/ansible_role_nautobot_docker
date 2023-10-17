@@ -140,9 +140,10 @@
         - "{{ nautobot__name }}-custom"
     register: result_local_image
 
+
   - name: Copy Dockerfile with plugins
     template:
-      src: Dockerfile_LDAP.j2
+      src: "{% if (nautobot__image | split(':')[1]) is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2"
       dest: "{{ nautobot__home }}/Dockerfile"
       owner: "{{ nautobot__container_uid }}"
       group: "{{ nautobot__container_gid }}"
@@ -151,11 +152,12 @@
 
   - name: Build Nautobot with custom plugins
     community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] | default('latest') }}"
+      name: "{{ nautobot__name }}-custom"
+      tag: "{{ nautobot__image | split(':')[1] | default('latest') }}"
       build:
         path: "{{ nautobot__home }}"
         nocache: true
-        pull: true # "{{ nautobot__pull_image | default(false) }}"
+        pull: false # "{{ nautobot__pull_image | default(false) }}"
         args:
           http_proxy: "{{ http_proxy | default('') }}"
           https_proxy: "{{ https_proxy | default('') }}"
@@ -173,18 +175,22 @@
 
   - name: Build Nautobot with custom plugins (second attempt)
     community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] | default('latest') }}"
+      name: "{{ nautobot__name }}-custom"
+      tag: "{{ nautobot__image | split(':')[1] | default('latest') }}"
       build:
         path: "{{ nautobot__home }}"
+        nocache: true
+        pull: false # "{{ nautobot__pull_image | default(false) }}"
         args:
           http_proxy: "{{ http_proxy | default('') }}"
-          https_proxy: "{{ https_proxy | default('') }}"        
+          https_proxy: "{{ https_proxy | default('') }}"
       source: build
+      force_source: yes
     when: docker_build is defined and docker_build.changed
 
   - name: Override image name with local Docker
     set_fact:
-      nautobot__image: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] | default('latest') }}"
+      nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
 - name: Set Docker Hub image

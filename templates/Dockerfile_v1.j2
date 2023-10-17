@@ -25,12 +25,12 @@ RUN pip3 install --upgrade nautobot[napalm]
 RUN pip3 install --upgrade nautobot[sso]
 RUN pip3 install --upgrade social-auth-core[openidconnect]
 RUN pip3 install --upgrade ansible==8.2.0
-RUN ansilbe-galaxy collection install ansible.netcommon
+RUN ansible-galaxy collection install ansible.netcommon
 
 {% if nautobot__plugins is defined %}
-RUN pip3 install --upgrade nornir-nautobot
+RUN pip3 install --upgrade nornir-nautobot<=2.0.0
 {% for plugin in nautobot__plugins %}
-RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}
+RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}<=2.0.0
 {% endfor %}
 {% endif %}
 
