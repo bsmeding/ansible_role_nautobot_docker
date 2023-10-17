@@ -7,8 +7,8 @@ FROM networktocode/${NAUTOBOT_IMAGE}-py${PYTHON_VER} as base
 USER 0
 RUN apt-get update -y && apt-get install -y libldap2-dev libsasl2-dev libssl-dev
 
-# Root install SAML dependencies
-RUN apt-get update -y && apt-get install -y llibxmlsec1-dev libxmlsec1-openssl pkg-config
+# Root install SAML dependencies # Removed llibxmlsec1-dev 17-09-23
+RUN apt-get update -y && apt-get install -y libxmlsec1-openssl pkg-config 
 
 # ---------------------------------
 # Stage: Builder
