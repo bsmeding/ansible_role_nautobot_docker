@@ -145,6 +145,7 @@ nautobot__postgres_user_env: {}
 
 # nautobot__plugins:
 #   - plugin_name: nautobot_device_onboarding
+#     plugin_version: 1.2.0
 #     plugin_config: {
 #           "nautobot_device_onboarding": {
 #           "default_ip_status": "Active",
@@ -153,6 +154,7 @@ nautobot__postgres_user_env: {}
 #           }
 #         }
 #   - plugin_name: nautobot-ssot
+#     plugin_version: 1.6.0
 #     plugin_config: {}
 #   - plugin_name: nautobot-plugin-nornir
 #     plugin_config: {
