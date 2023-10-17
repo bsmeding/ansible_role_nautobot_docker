@@ -151,11 +151,11 @@
 
   - name: Build Nautobot with custom plugins
     community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom"
+      name: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] | default('latest') }}"
       build:
         path: "{{ nautobot__home }}"
         nocache: true
-        pull: "{{ nautobot__pull_image | default(false) }}"
+        pull: true # "{{ nautobot__pull_image | default(false) }}"
         args:
           http_proxy: "{{ http_proxy | default('') }}"
           https_proxy: "{{ https_proxy | default('') }}"
@@ -173,7 +173,7 @@
 
   - name: Build Nautobot with custom plugins (second attempt)
     community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom"
+      name: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] | default('latest') }}"
       build:
         path: "{{ nautobot__home }}"
         args:
@@ -184,7 +184,7 @@
 
   - name: Override image name with local Docker
     set_fact:
-      nautobot__image: "{{ nautobot__name }}-custom"
+      nautobot__image: "{{ nautobot__name }}-custom:{{ nautobot__image | split(':')[1] | default('latest') }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
 - name: Set Docker Hub image
