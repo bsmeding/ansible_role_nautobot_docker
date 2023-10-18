@@ -31,6 +31,7 @@ RUN ansible-galaxy collection install ansible.netcommon
 RUN pip3 install --upgrade nornir-nautobot
 {% for plugin in nautobot__plugins %}
 RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% if plugin.plugin_version %}=={{ plugin.plugin_version }}{% endif %}
+
 {% endfor %}
 {% endif %}
 

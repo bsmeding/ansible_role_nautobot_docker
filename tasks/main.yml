@@ -143,7 +143,7 @@
 
   - name: Copy Dockerfile with plugins
     template:
-      src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2"
+      src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
       dest: "{{ nautobot__home }}/Dockerfile"
       owner: "{{ nautobot__container_uid }}"
       group: "{{ nautobot__container_gid }}"
