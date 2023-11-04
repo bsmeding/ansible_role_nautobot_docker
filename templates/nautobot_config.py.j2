@@ -381,11 +381,6 @@ LOGGING = {
         },
     },
     "handlers": {
-        "normal_console": {
-            "level": LOG_LEVEL,
-            "class": "rq.utils.ColorizingStreamHandler",
-            "formatter": "normal",
-        },
         "nautobot_log": {
             "level": "DEBUG",
             "class": "logging.handlers.TimedRotatingFileHandler",

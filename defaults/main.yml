@@ -13,7 +13,7 @@ nautobot__napalm_username: cisco
 nautobot__napalm_password: cisco
 nautobot__install_own_postgres_db: true
 nautobot__postgres_name: nautobot-db
-nautobot__postgres_image: postgres:14
+nautobot__postgres_image: postgres:13 # Apple Silicon have issues with 14, no need for nautobot to go to 14
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
 nautobot__redis_password: nautobotredispassw
@@ -87,7 +87,7 @@ nautobot__directory_volumes:
 - "{{ nautobot__home }}/logs:/var/log/nautobot"
 - "{{ nautobot__home }}/media:/opt/nautobot/media"
 # - "{{ nautobot__home }}/static:/opt/nautobot/static"
-# - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs" # Please use jobs with Gitlab sync, not local on the server
+# - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
 nautobot__file_volumes: []
 nautobot__postgres_directory_volumes:
 - "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"
@@ -121,8 +121,7 @@ nautobot__default_env:
   NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
   NAUTOBOT_CACHEOPS_REDIS: "redis://:{{ nautobot__redis_password }}@{{ nautobot__name }}-redis:6379/1"
   NAUTOBOT_REDIS_PORT: "6379"
-  # Uncomment REDIS_SSL if using SSL
-  # NAUTOBOT_REDIS_SSL=True
+  NAUTOBOT_REDIS_SSL: "{{ nautobot__redis_ssl | default(false) }}"
   NAUTOBOT_SECRET_KEY: "{{ nautobot__secret_key }}"
   NAUTOBOT_AUTH_LDAP_SERVER_URI: "ldap://{{ nautobot__ldap_auth_server_ip }}:{{ nautobot__ldap_auth_server_port }}"
   NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
