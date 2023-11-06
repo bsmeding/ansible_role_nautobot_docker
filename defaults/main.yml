@@ -121,7 +121,7 @@ nautobot__default_env:
   NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
   NAUTOBOT_CACHEOPS_REDIS: "redis://:{{ nautobot__redis_password }}@{{ nautobot__name }}-redis:6379/1"
   NAUTOBOT_REDIS_PORT: "6379"
-  NAUTOBOT_REDIS_SSL: "{{ nautobot__redis_ssl | default(false) }}"
+  NAUTOBOT_REDIS_SSL: "{{ nautobot__redis_ssl | default('false') }}"
   NAUTOBOT_SECRET_KEY: "{{ nautobot__secret_key }}"
   NAUTOBOT_AUTH_LDAP_SERVER_URI: "ldap://{{ nautobot__ldap_auth_server_ip }}:{{ nautobot__ldap_auth_server_port }}"
   NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
