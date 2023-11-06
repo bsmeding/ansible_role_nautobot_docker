@@ -171,7 +171,7 @@
     ansible.builtin.service:
       name: docker
       state: restarted
-    when: "docker_build is defined and not 'Successfully tagged' in docker_build.stdout"
+    when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
   - name: Build Nautobot with custom plugins (second attempt)
     community.docker.docker_image:
@@ -186,7 +186,7 @@
           https_proxy: "{{ https_proxy | default('') }}"
       source: build
       force_source: yes
-    when: "docker_build is defined and not 'Successfully tagged' in docker_build.stdout"
+    when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
   - name: Override image name with local Docker
     set_fact:
