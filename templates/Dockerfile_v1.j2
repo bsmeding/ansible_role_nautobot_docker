@@ -25,6 +25,11 @@ RUN pip3 install --upgrade nautobot[napalm]
 RUN pip3 install --upgrade nautobot[sso]
 RUN pip3 install --upgrade social-auth-core[openidconnect]
 RUN pip3 install --upgrade ansible==8.2.0
+RUN pip3 install --upgrade pandas
+RUN pip3 install --upgrade openpyxl
+RUN pip3 install --upgrade hier-config
+RUN pip3 install --upgrade pyntc
+RUN pip3 install --upgrade pyats
 RUN ansible-galaxy collection install ansible.netcommon
 
 {% if nautobot__plugins is defined %}
