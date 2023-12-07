@@ -3,6 +3,10 @@ container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
 nautobot__image: nautobot:1.5
 nautobot__image_python_version: '3.9'
+nautobot__install_ansible_version: '8.2.0'
+nautobot__install_ansible_collections:
+  - ansible.netcommon
+  - ansible.utils
 nautobot__port_http: 8080
 nautobot__port_https: 8444
 nautobot__superuser_name: admin
@@ -141,6 +145,8 @@ nautobot__postgres_env:
   POSTGRES_USER: "{{ nautobot__postgres_user }}"
   NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
 nautobot__postgres_user_env: {}
+
+nautobot__extra_pip_packages:
 
 # nautobot__plugins:
 #   - plugin_name: nautobot_device_onboarding
