@@ -24,7 +24,7 @@ RUN pip3 install --upgrade pip wheel && pip3 install django-auth-ldap
 RUN pip3 install --upgrade nautobot[napalm]
 RUN pip3 install --upgrade nautobot[sso]
 RUN pip3 install --upgrade social-auth-core[openidconnect]
-UN pip3 install --upgrade ansible=={{ nautobot_install_ansible_version | default('8.2.0') }}
+RUN pip3 install --upgrade ansible=={{ nautobot_install_ansible_version | default('8.2.0') }}
 
 # Check extra pip packages to install
 {% if nautobot__extra_pip_packages is defined %}
