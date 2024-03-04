@@ -27,7 +27,7 @@ RUN pip3 install --upgrade social-auth-core[openidconnect]
 RUN pip3 install --upgrade ansible=={{ nautobot_install_ansible_version | default('8.2.0') }}
 
 # Check extra pip packages to install
-{% if nautobot__extra_pip_packages is defined %}
+{% if nautobot__extra_pip_packages is defined and nautobot__extra_pip_packages|length>0%}
 {% for pip_package in nautobot__extra_pip_packages %}
 RUN pip3 install --upgrade {{ pip_package }}
 
@@ -35,7 +35,7 @@ RUN pip3 install --upgrade {{ pip_package }}
 {% endif %}
 
 # Check Ansible collections
-{% if nautobot__install_ansible_collections is defined %}
+{% if nautobot__install_ansible_collections is defined and nautobot__install_ansible_collections|length>0%}
 {% for ansible_collection in nautobot__install_ansible_collections %}
 RUN ansible-galaxy collection install {{ ansible_collection }}
 
@@ -43,7 +43,7 @@ RUN ansible-galaxy collection install {{ ansible_collection }}
 {% endif %}
 
 # Check Nautobot plugins
-{% if nautobot__plugins is defined %}
+{% if nautobot__plugins is defined and nautobot__plugins|length>0 %}
 RUN pip3 install --upgrade nornir-nautobot
 {% for plugin in nautobot__plugins %}
 RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% if plugin.plugin_version %}=={{ plugin.plugin_version }}{% endif %}

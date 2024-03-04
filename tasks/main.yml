@@ -27,10 +27,16 @@
 - name: Create a network for nautobot
   community.docker.docker_network:
     name: "{{ nautobot__network_name }}"
+  when: nautobot__network_cidr is undefined or (nautobot__network_cidr is defined and nautobot__network_cidr|length<6)
+
+- name: Create a network for nautobot with ip cidr
+  community.docker.docker_network:
+    name: "{{ nautobot__network_name }}"
     ipam_config:
       - subnet: "{{ nautobot__network_cidr }}"
         gateway: "{{ nautobot__network_cidr | ansible.utils.ipaddr('next_usable') }}"
         iprange: "{{ nautobot__network_cidr }}"
+  when: nautobot__network_cidr is defined and nautobot__network_cidr|length>5
 
 - name: Create database volume for Postgres
   community.docker.docker_volume:

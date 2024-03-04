@@ -55,7 +55,7 @@ nautobot__pull_image: true
 nautobot__log_level: 'WARNING' # DEBUG  'INFO'    'WARNING'
 nautobot__network_mode:
 nautobot__network_name: nautobot
-nautobot__network_cidr: 172.16.20.0/26
+# nautobot__network_cidr: 172.16.20.0/26
 nautobot__networks:
   - name: bridge
   - name: "{{ nautobot__network_name }}"
