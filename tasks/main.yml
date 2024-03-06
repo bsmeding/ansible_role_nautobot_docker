@@ -140,7 +140,7 @@
 
 - name: Plugins found - build custom image
   block:
-  - name: Check if image exists
+  - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
     community.docker.docker_image_info:
       name:
         - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
