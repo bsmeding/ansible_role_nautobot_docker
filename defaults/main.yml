@@ -57,7 +57,6 @@ nautobot__network_mode:
 nautobot__network_name: nautobot
 # nautobot__network_cidr: 172.16.20.0/26
 nautobot__networks:
-  - name: bridge
   - name: "{{ nautobot__network_name }}"
 nautobot__purge_networks: false
 nautobot__env: {}
@@ -146,8 +145,8 @@ nautobot__postgres_env:
   NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
 nautobot__postgres_user_env: {}
 
-nautobot__extra_pip_packages:
-
+nautobot__extra_pip_packages: []
+nautobot__plugins: []
 # nautobot__plugins:
 #   - plugin_name: nautobot_device_onboarding
 #     plugin_version: 1.2.0

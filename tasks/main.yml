@@ -146,7 +146,6 @@
         - "{{ nautobot__name }}-custom"
     register: result_local_image
 
-
   - name: Copy Dockerfile with plugins
     template:
       src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
@@ -211,7 +210,6 @@
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"
-    purge_networks: "{{ nautobot__purge_networks | default('no') }}"
     ports: "{{ nautobot__ports }}"
     user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
