@@ -143,7 +143,7 @@
   - name: Check if image exists
     community.docker.docker_image_info:
       name:
-        - "{{ nautobot__name }}-custom"
+        - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
     register: result_local_image
 
   - name: Copy Dockerfile with plugins
