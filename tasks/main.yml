@@ -1,27 +1,27 @@
 ---
 - name: Remove existing {{ nautobot__name }} containers
   block:
-  - name: Remove default
-    docker_container:
-      name: "{{ nautobot__name }}"
-      state: absent
-  - name: Remove Celery Worker
-    docker_container:
-      name: "{{ nautobot__name }}-celery-worker"
-      state: absent
-  - name: Remove Celery Beat
-    docker_container:
-      name: "{{ nautobot__name }}-celery-beat"
-      state: absent
-  - name: Remove Redis
-    docker_container:
-      name: "{{ nautobot__name }}-redis"
-      state: absent
-  - name: Remove db
-    docker_container:
-      name: "{{ nautobot__name }}-db"
-      state: absent
-    when: nautobot__install_own_postgres_db
+    - name: Remove default
+      docker_container:
+        name: "{{ nautobot__name }}"
+        state: absent
+    - name: Remove Celery Worker
+      docker_container:
+        name: "{{ nautobot__name }}-celery-worker"
+        state: absent
+    - name: Remove Celery Beat
+      docker_container:
+        name: "{{ nautobot__name }}-celery-beat"
+        state: absent
+    - name: Remove Redis
+      docker_container:
+        name: "{{ nautobot__name }}-redis"
+        state: absent
+    - name: Remove db
+      docker_container:
+        name: "{{ nautobot__name }}-db"
+        state: absent
+      when: nautobot__install_own_postgres_db
   when: nautobot__remove_existing_container
 
 - name: Create a network for nautobot
@@ -109,14 +109,14 @@
 
 - name: Construct plugin config
   block:
-  - name: Create Plugins list
-    set_fact:
-      nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+    - name: Create Plugins list
+      set_fact:
+        nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
 
-  - name: Construct plugin config
-    set_fact:
-      nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
-    with_items: "{{ nautobot__plugins }}"
+    - name: Construct plugin config
+      set_fact:
+        nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
+      with_items: "{{ nautobot__plugins }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
 - name: Copy nautobot_config.py so it is present by new installations
@@ -140,62 +140,62 @@
 
 - name: Plugins found - build custom image
   block:
-  - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
-    community.docker.docker_image_info:
-      name:
-        - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-    register: result_local_image
+    - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
+      community.docker.docker_image_info:
+        name:
+          - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+      register: result_local_image
 
-  - name: Copy Dockerfile with plugins
-    template:
-      src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
-      dest: "{{ nautobot__home }}/Dockerfile"
-      owner: "{{ nautobot__container_uid }}"
-      group: "{{ nautobot__container_gid }}"
-      mode: "0760"
-    register: dockerfile
+    - name: Copy Dockerfile with plugins
+      template:
+        src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
+        dest: "{{ nautobot__home }}/Dockerfile"
+        owner: "{{ nautobot__container_uid }}"
+        group: "{{ nautobot__container_gid }}"
+        mode: "0760"
+      register: dockerfile
 
-  - name: Build Nautobot with custom plugins
-    community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom"
-      tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-      build:
-        path: "{{ nautobot__home }}"
-        nocache: true
-        pull: false # "{{ nautobot__pull_image | default(false) }}"
-        args:
-          http_proxy: "{{ http_proxy | default('') }}"
-          https_proxy: "{{ https_proxy | default('') }}"
-      source: build
-      force_source: yes
-    register: docker_build
-    ignore_errors: true
-    when: dockerfile.changed or result_local_image.images | length <1
+    - name: Build Nautobot with custom plugins
+      community.docker.docker_image:
+        name: "{{ nautobot__name }}-custom"
+        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        build:
+          path: "{{ nautobot__home }}"
+          nocache: true
+          pull: false # "{{ nautobot__pull_image | default(false) }}"
+          args:
+            http_proxy: "{{ http_proxy | default('') }}"
+            https_proxy: "{{ https_proxy | default('') }}"
+        source: build
+        force_source: yes
+      register: docker_build
+      ignore_errors: true
+      when: dockerfile.changed or result_local_image.images | length <1
 
-  - name: Restart Docker if build failed
-    ansible.builtin.service:
-      name: docker
-      state: restarted
-    when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
+    - name: Restart Docker if build failed
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+      when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
-  - name: Build Nautobot with custom plugins (second attempt)
-    community.docker.docker_image:
-      name: "{{ nautobot__name }}-custom"
-      tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-      build:
-        path: "{{ nautobot__home }}"
-        nocache: true
-        pull: false # "{{ nautobot__pull_image | default(false) }}"
-        args:
-          http_proxy: "{{ http_proxy | default('') }}"
-          https_proxy: "{{ https_proxy | default('') }}"
-      source: build
-      force_source: yes
-    when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
+    - name: Build Nautobot with custom plugins (second attempt)
+      community.docker.docker_image:
+        name: "{{ nautobot__name }}-custom"
+        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        build:
+          path: "{{ nautobot__home }}"
+          nocache: true
+          pull: false # "{{ nautobot__pull_image | default(false) }}"
+          args:
+            http_proxy: "{{ http_proxy | default('') }}"
+            https_proxy: "{{ https_proxy | default('') }}"
+        source: build
+        force_source: yes
+      when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
-  - name: Override image name with local Docker
-    set_fact:
-      nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+    - name: Override image name with local Docker
+      set_fact:
+        nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
 - name: Set Docker Hub image
@@ -252,7 +252,7 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
-    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"      
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
@@ -268,7 +268,7 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
-    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"      
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"

@@ -29,10 +29,10 @@ nautobot__ldap_search_users: "ou=people,dc=example,dc=com"
 nautobot__ldap_search_uid: sAMAccountName=%(user)s    # uid=%(user)s    # &(objectClass=user)(sAMAccountName=%(user)s)
 nautobot__ldap_search_users_dn_template: ''
 nautobot__ldap_search_users_attribute_map: {
-    "first_name": "givenName",
-    "last_name": "sn",
-    "email": "mail"
-  }
+  "first_name": "givenName",
+  "last_name": "sn",
+  "email": "mail"
+}
 nautobot__ldap_group_search: "ou=groups,dc=example,dc=com"
 nautobot__ldap_group_search_objectClass: groupOfNames
 nautobot__ldap_group_search_group_type: GroupOfNamesType()
@@ -65,35 +65,35 @@ nautobot__log_options:
 nautobot__home: "/opt/{{ nautobot__name }}"
 nautobot__remove_existing_home_dir: false
 nautobot__directories:
-- path: "{{ nautobot__home }}"
-  mode: "0760"
-  owner: root
-  group: 999 # 999 is needed for nautobot group in the container
-- path: "{{ nautobot__home }}/config"
-  mode: "0760"
-  owner: root
-  group: 999 # 999 is needed for nautobot group in the container
-- path: "{{ nautobot__home }}/logs"
-  mode: "0760"
-  owner: root
-  group: 999 # 999 is needed for nautobot group in the container
-- path: "{{ nautobot__home }}/media"
-  mode: "0760"
-  owner: root
-  group: 999 # 999 is needed for nautobot group in the container
+  - path: "{{ nautobot__home }}"
+    mode: "0760"
+    owner: root
+    group: 999 # 999 is needed for nautobot group in the container
+  - path: "{{ nautobot__home }}/config"
+    mode: "0760"
+    owner: root
+    group: 999 # 999 is needed for nautobot group in the container
+  - path: "{{ nautobot__home }}/logs"
+    mode: "0760"
+    owner: root
+    group: 999 # 999 is needed for nautobot group in the container
+  - path: "{{ nautobot__home }}/media"
+    mode: "0760"
+    owner: root
+    group: 999 # 999 is needed for nautobot group in the container
 nautobot__db_volume_name: "nautobot_db"
 nautobot__ports:
-- "{{ nautobot__port_http }}:8080"
-- "{{ nautobot__port_https }}:8443"
+  - "{{ nautobot__port_http }}:8080"
+  - "{{ nautobot__port_https }}:8443"
 nautobot__directory_volumes:
-- "{{ nautobot__home }}/config:/opt/nautobot/"
-- "{{ nautobot__home }}/logs:/var/log/nautobot"
-- "{{ nautobot__home }}/media:/opt/nautobot/media"
-# - "{{ nautobot__home }}/static:/opt/nautobot/static"
-# - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
+  - "{{ nautobot__home }}/config:/opt/nautobot/"
+  - "{{ nautobot__home }}/logs:/var/log/nautobot"
+  - "{{ nautobot__home }}/media:/opt/nautobot/media"
+  # - "{{ nautobot__home }}/static:/opt/nautobot/static"
+  # - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
 nautobot__file_volumes: []
 nautobot__postgres_directory_volumes:
-- "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"
+  - "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"
 nautobot__default_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
