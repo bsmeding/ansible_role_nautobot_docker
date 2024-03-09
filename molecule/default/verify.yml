@@ -1,5 +1,5 @@
 ---
-- name: Verify - Nginx is running
+- name: Verify - Nautobot is running
   hosts: all
   become: false
   tasks:
@@ -9,9 +9,9 @@
         extensions:
           - "yml"
 
-    - name: Check that if default page is running
+    - name: Check if Nautobot login page is running
       ansible.builtin.uri:
-        url: "http://localhost:{{ nginx__port_http  }}"
+        url: "http://localhost:{{ nautobot__port_http  }}"
         return_content: true
       register: local_webserver_output
       failed_when: local_webserver_output is failed or local_webserver_output.status != 200

@@ -90,7 +90,7 @@
     env: "{{ nautobot__redis_env }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
-    command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}" 
+    command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}"
 
 - name: Install Redis client tools
   ansible.builtin.package:
@@ -279,13 +279,13 @@
 
 - name: Construct plugin config
   block:
-  - name: Create Plugins list
-    set_fact:
-      nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
-  - name: Construct plugin config
-    set_fact:
-      nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
-    with_items: "{{ nautobot__plugins }}"
+    - name: Create Plugins list
+      set_fact:
+        nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+    - name: Construct plugin config
+      set_fact:
+        nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
+      with_items: "{{ nautobot__plugins }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
 
 # - name: Copy uWSGI

@@ -1,7 +1,7 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:1.5
+nautobot__image: nautobot:2.0
 nautobot__image_python_version: '3.9'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__install_ansible_collections:

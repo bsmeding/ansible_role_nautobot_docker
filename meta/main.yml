@@ -1,6 +1,4 @@
 ---
-dependencies: []
-
 galaxy_info:
   role_name: nautobot_docker
   author: bsmeding
@@ -33,3 +31,4 @@ galaxy_info:
     - tower
     - ansible
     - docker
+dependencies: []

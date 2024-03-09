@@ -3,7 +3,6 @@
   docker_container:
     name: "{{ nautobot__name }}"
     restart: true
-
 - name: restart nautobot-stack
   docker_container:
     name: "{{ nautobot__name }}"
@@ -15,7 +14,7 @@
 - name: restart nautobot-stack
   docker_container:
     name: "{{ nautobot__name }}-celery-worker"
-    restart: true    
+    restart: true
 - name: restart nautobot-stack
   docker_container:
     name: "{{ nautobot__name }}-celery-beat"
@@ -27,4 +26,4 @@
 - name: restart nautobot-stack
   docker_container:
     name: "{{ nautobot__name }}-db"
-    restart: true    
+    restart: true
