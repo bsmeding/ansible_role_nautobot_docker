@@ -19,59 +19,59 @@
     nautobot__plugins:
       - plugin_name: nautobot_device_onboarding
         plugin_config: {
-              "nautobot_device_onboarding": {
-                "default_ip_status": "Active",
-                "default_device_role": "onboarding",
-                "skip_device_type_on_update": True,
-              }
-            }
+          "nautobot_device_onboarding": {
+            "default_ip_status": "Active",
+            "default_device_role": "onboarding",
+            "skip_device_type_on_update": true,
+          }
+        }
       - plugin_name: nautobot-ssot
         plugin_config: {}
       - plugin_name: nautobot-plugin-nornir
         plugin_config: {
           "nautobot_plugin_nornir": {
-            "use_config_context": {"secrets": False, "connection_options": True},
+            "use_config_context": {"secrets": false, "connection_options": true},
             # Optionally set global connection options.
             "connection_options": {
-                "napalm": {
-                    "extras": {
-                        "optional_args": {"global_delay_factor": 1},
-                    },
+              "napalm": {
+                "extras": {
+                  "optional_args": {"global_delay_factor": 1},
                 },
-                "netmiko": {
-                    "extras": {
-                        "global_delay_factor": 1,
-                    },
+              },
+              "netmiko": {
+                "extras": {
+                  "global_delay_factor": 1,
                 },
+              },
             },
             "nornir_settings": {
-                "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
-                "runner": {
-                    "plugin": "threaded",
-                    "options": {
-                        "num_workers": 20,
-                    },
+              "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
+              "runner": {
+                "plugin": "threaded",
+                "options": {
+                  "num_workers": 20,
                 },
+              },
             },
           }
         }
       - plugin_name: nautobot-golden-config
         plugin_config: {
-            "nautobot_golden_config": {
-              "per_feature_bar_width": 0.15,
-              "per_feature_width": 13,
-              "per_feature_height": 4,
-              "enable_backup": False,
-              "enable_compliance": False,
-              "enable_intended": True,
-              "enable_sotagg": True,
-              "sot_agg_transposer": None,
-              "enable_postprocessing": False,
-              "postprocessing_callables": [],
-              "postprocessing_subscribed": [],
-              "platform_slug_map": None,
-              # "get_custom_compliance": "my.custom_compliance.func"
-            }
+          "nautobot_golden_config": {
+            "per_feature_bar_width": 0.15,
+            "per_feature_width": 13,
+            "per_feature_height": 4,
+            "enable_backup": false,
+            "enable_compliance": false,
+            "enable_intended": true,
+            "enable_sotagg": true,
+            "sot_agg_transposer": None,
+            "enable_postprocessing": false,
+            "postprocessing_callables": [],
+            "postprocessing_subscribed": [],
+            "platform_slug_map": None,
+            # "get_custom_compliance": "my.custom_compliance.func"
+          }
         }
   tasks:
     # - name: Check if nautobot is installed
