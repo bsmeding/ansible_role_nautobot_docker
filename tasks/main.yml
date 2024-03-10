@@ -1,4 +1,26 @@
 ---
+- name: Include OS-specific vars
+  include_vars: "{{ ansible_os_family }}.yml"
+
+- name: Install packages for OS
+  ansible.builtin.package:
+    name={{ item.name }}
+    version={{ item.version | default(omit) }}
+  with_items: "{{ os_packages }}"
+  become: true
+  when: os_packages is defined
+
+- name: Install  pip packages
+  ansible.builtin.pip:
+    name: "{{ item }}"
+    state: forcereinstall
+    executable: pip3
+    extra_args: "--user --upgrade"
+    umask: "0022"
+  changed_when: false
+  with_items: "{{ python_packages }}"
+  when: python_packages is defined
+
 - name: Remove existing {{ nautobot__name }} containers
   block:
     - name: Remove default
