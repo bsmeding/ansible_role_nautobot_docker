@@ -1,5 +1,2 @@
-netaddr
-jmeshpath
-
 roles:
   - src: bsmeding.docker
