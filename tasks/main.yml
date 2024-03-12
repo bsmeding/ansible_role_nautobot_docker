@@ -15,7 +15,7 @@
     name: "{{ item }}"
     state: forcereinstall
     executable: pip3
-    extra_args: "--user --upgrade"
+    extra_args: "--user --upgrade {{ nautobot__pip_install_extra_args }}"
     umask: "0022"
   changed_when: false
   with_items: "{{ python_packages }}"
@@ -63,7 +63,7 @@
 - name: Create database volume for Postgres
   community.docker.docker_volume:
     name: "{{ nautobot__db_volume_name }}"
-  when: nautobot__install_own_postgres_db
+  when: nautobot__install_own_postgres_db and (nautobot__db_volume_name is defined and nautobot__db_volume_name != '')
 
 # - name: Create config volume for Nautobot
 #   community.docker.docker_volume:
@@ -74,6 +74,40 @@
     state: absent
     path: "{{ nautobot__home }}"
   when: nautobot__remove_existing_home_dir
+
+- name: Ensure group "postgres" exists with correct gid
+  ansible.builtin.group:
+    name: postgres
+    state: present
+    gid: 999
+
+- name: Add user "postgres"
+  ansible.builtin.user:
+    name: postgres
+    groups: docker
+    shell: /sbin/nologin
+    uid: 999
+    create_home: no
+    append: yes
+    comment: "Postgres data user"
+    state: present
+  become: true
+
+- name: Ensure group "nautobot" exists with correct gid
+  ansible.builtin.group:
+    name: nautobot
+    state: present
+    gid: "{{ nautobot__container_gid }}"
+# User cannot be created as Nautobot use 999 same as postgress and cannot be changed with ENV Vars
+
+- name: Create Nautobot home dir
+  file:
+    state: directory
+    path: "{{ nautobot__home }}"
+    recurse: true
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
 
 - name: Create directories
   file:
@@ -92,7 +126,6 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
-    purge_networks: "{{ nautobot__purge_networks | default('no') }}"
     env: "{{ nautobot__postgres_env | combine(nautobot__postgres_user_env) }}"
     volumes: "{{ nautobot__postgres_directory_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
@@ -108,7 +141,6 @@
     network_mode: "{{ nautobot__network_mode }}"
     networks:
       - name: "{{ nautobot__network_name }}"
-    purge_networks: "{{ nautobot__purge_networks | default('no') }}"
     env: "{{ nautobot__redis_env }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
@@ -119,15 +151,6 @@
     name: redis-tools
     state: present
   when: nautobot__install_redis_client_tools
-
-- name: Create directories Dockerfile
-  file:
-    state: directory
-    path: "{{ nautobot__home }}"
-    recurse: true
-    mode: "0760"
-    owner: "{{ nautobot__container_uid | default(docker_uid) | default('root') }}"
-    group: "{{ nautobot__container_gid | default(docker_gid) | default('root') }}"
 
 - name: Construct plugin config
   block:
@@ -146,8 +169,8 @@
     src: nautobot_config.py.j2
     # dest: "{{ nautobot__config_volume_path }}/nautobot_config.py"
     dest: "{{ nautobot__home }}/config/nautobot_config.py"
-    owner: "{{ nautobot__container_uid }}"
-    group: "{{ nautobot__container_gid }}"
+    owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
+    group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
     mode: "0760"
   notify: restart nautobot-stack
 
@@ -155,8 +178,8 @@
   template:
     src: uwsgi.ini.j2
     dest: "{{ nautobot__home }}/config/uwsgi.ini"
-    owner: "{{ nautobot__container_uid }}"
-    group: "{{ nautobot__container_gid }}"
+    owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
+    group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
     mode: "0760"
   notify: restart nautobot-stack
 
@@ -172,8 +195,8 @@
       template:
         src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
         dest: "{{ nautobot__home }}/Dockerfile"
-        owner: "{{ nautobot__container_uid }}"
-        group: "{{ nautobot__container_gid }}"
+        owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
+        group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
         mode: "0760"
       register: dockerfile
 
@@ -274,7 +297,7 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
-    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
+    # user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
@@ -290,7 +313,7 @@
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
-    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
+    # user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"

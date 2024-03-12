@@ -1,0 +1,30 @@
+---
+- name: Destroy - remove containers
+  hosts: all
+  become: false
+  tasks:
+    - name: Include default vars
+      ansible.builtin.include_vars:
+        dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/"
+        extensions:
+          - "yml"
+    - name: Remove default
+      community.docker.docker_container:
+        name: "{{ nautobot__name }}"
+        state: absent
+    - name: Remove Celery Worker
+      community.docker.docker_container:
+        name: "{{ nautobot__name }}-celery-worker"
+        state: absent
+    - name: Remove Celery Beat
+      community.docker.docker_container:
+        name: "{{ nautobot__name }}-celery-beat"
+        state: absent
+    - name: Remove Redis
+      community.docker.docker_container:
+        name: "{{ nautobot__name }}-redis"
+        state: absent
+    - name: Remove db
+      community.docker.docker_container:
+        name: "{{ nautobot__name }}-db"
+        state: absent

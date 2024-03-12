@@ -7,8 +7,10 @@ nautobot__install_ansible_version: '8.2.0'
 nautobot__install_ansible_collections:
   - ansible.netcommon
   - ansible.utils
+nautobot__pip_install_extra_args: ''
 nautobot__port_http: 8080
 nautobot__port_https: 8444
+nautobot__home: "/opt/{{ nautobot__name }}"
 nautobot__superuser_name: admin
 nautobot__superuser_password: admin
 nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz" # Max 40 char
@@ -20,6 +22,7 @@ nautobot__postgres_name: nautobot-db
 nautobot__postgres_image: postgres:13 # Apple Silicon have issues with 14, no need for nautobot to go to 14
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
+nautobot__postgres_data_dir: "{{ nautobot__home }}/pgdocker/{{ (nautobot__postgres_image | split(':'))[1] }}/data"
 nautobot__redis_password: nautobotredispassw
 nautobot__ldap_auth_server_ip: ''
 nautobot__ldap_auth_server_port: 389
@@ -46,7 +49,7 @@ nautobot__ldap_cache_groups: true
 nautobot__install_worker: false # Only for version before 1.1
 nautobot__install_redis_client_tools: false
 nautobot__container_uid: 999 # Use 999 for internal ID of nautobot user in the container
-nautobot__container_gid: 999 # Use 999 for internal ID of nautobot user in the container
+nautobot__container_gid: 998 # Use 999 for internal ID of nautobot user in the container
 nautobot__allowed_hosts: '*'
 nautobot__remove_existing_container: false # DO NOT USE WHEN RUNNING PRODUCTION
 nautobot__banner_login: 'nautobot demo use admin, admin to login'
@@ -62,26 +65,34 @@ nautobot__purge_networks: false
 nautobot__env: {}
 nautobot__log_driver: json-file
 nautobot__log_options:
-nautobot__home: "/opt/{{ nautobot__name }}"
+
 nautobot__remove_existing_home_dir: false
 nautobot__directories:
   - path: "{{ nautobot__home }}"
     mode: "0760"
-    owner: root
-    group: 999 # 999 is needed for nautobot group in the container
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
   - path: "{{ nautobot__home }}/config"
     mode: "0760"
-    owner: root
-    group: 999 # 999 is needed for nautobot group in the container
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
   - path: "{{ nautobot__home }}/logs"
     mode: "0760"
-    owner: root
-    group: 999 # 999 is needed for nautobot group in the container
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
   - path: "{{ nautobot__home }}/media"
     mode: "0760"
-    owner: root
-    group: 999 # 999 is needed for nautobot group in the container
-nautobot__db_volume_name: "nautobot_db"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
+  - path: "{{ nautobot__home }}/jobs"
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
+  - path: "{{ nautobot__postgres_data_dir }}"
+    mode: "0760"
+    owner: postgres
+    group: postgres
+# nautobot__db_volume_name: '' # If use a Docker volume will be used instead of mapped folder
 nautobot__ports:
   - "{{ nautobot__port_http }}:8080"
   - "{{ nautobot__port_https }}:8443"
@@ -89,11 +100,12 @@ nautobot__directory_volumes:
   - "{{ nautobot__home }}/config:/opt/nautobot/"
   - "{{ nautobot__home }}/logs:/var/log/nautobot"
   - "{{ nautobot__home }}/media:/opt/nautobot/media"
+  - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
   # - "{{ nautobot__home }}/static:/opt/nautobot/static"
-  # - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
 nautobot__file_volumes: []
 nautobot__postgres_directory_volumes:
-  - "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"
+  # - "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"    # When using data volume
+  - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"

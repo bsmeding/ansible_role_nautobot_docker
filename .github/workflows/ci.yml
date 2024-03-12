@@ -60,7 +60,7 @@ jobs:
           haskell: true
           large-packages: true
           docker-images: true
-      
+
       - name: Check out the codebase.
         uses: actions/checkout@v2
         with:

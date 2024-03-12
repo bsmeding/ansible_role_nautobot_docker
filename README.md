@@ -9,7 +9,7 @@ This role will install Nautobot as docker container. If you need docker aswell, 
 Git as Data Source
 ==================
 
-Read more: https://docs.nautobot.com/projects/core/en/v1.0.0/user-guides/git-data-source/
+Read more https://docs.nautobot.com/projects/core/en/v1.0.0/user-guides/git-data-source/
 https://docs.nautobot.com/projects/core/en/v1.0.0/models/extras/configcontext/
 
 Install Nautobot docker
@@ -221,7 +221,7 @@ junipernetworks.junos.junos
 ```
 
 # Install plugins
-To install plugins, set the variable `nautobot__plugins` with the desired plugins to install, example: 
+To install plugins, set the variable `nautobot__plugins` with the desired plugins to install, example:
 
 ```
 nautobot__plugins:
