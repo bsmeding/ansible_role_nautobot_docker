@@ -88,6 +88,7 @@
     shell: /sbin/nologin
     uid: 999
     create_home: no
+    non_unique: true
     append: yes
     comment: "Postgres data user"
     state: present
