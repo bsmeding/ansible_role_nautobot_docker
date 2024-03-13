@@ -109,14 +109,22 @@
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
 
-- name: Create directories
-  file:
+- name: Create directories from variable list
+  ansible.builtin.file:
     state: directory
     path: "{{ item.path }}"
     mode: "{{ item.mode | default('0755') }}"
-    owner: "{{ item.owner | default(docker_uid) | default('root') }}" # First docker user (if docker role has run), otherwise default role, otherwise root
+    owner: "{{ item.owner | default(docker_uid) | default('root') }}"
     group: "{{ item.group | default(docker_gid) | default('root') }}"
   with_items: "{{ nautobot__directories }}"
+
+- name: Create database directories
+  ansible.builtin.file:
+    state: directory
+    path: "{{ nautobot__postgres_data_dir }}"
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('postgres') }}"
+    group: "{{ nautobot__container_gid | default('postgres') }}"
 
 # Create PostgreSQL  DB
 - name: Run DB container

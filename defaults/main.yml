@@ -88,11 +88,6 @@ nautobot__directories:
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
-  - path: "{{ nautobot__postgres_data_dir }}"
-    mode: "0760"
-    owner: postgres
-    group: "{{ nautobot__container_gid | default('root') }}"
-# nautobot__db_volume_name: '' # If use a Docker volume will be used instead of mapped folder
 nautobot__ports:
   - "{{ nautobot__port_http }}:8080"
   - "{{ nautobot__port_https }}:8443"
@@ -104,7 +99,6 @@ nautobot__directory_volumes:
   # - "{{ nautobot__home }}/static:/opt/nautobot/static"
 nautobot__file_volumes: []
 nautobot__postgres_directory_volumes:
-  # - "{{ nautobot__db_volume_name }}:/var/lib/postgresql/data"    # When using data volume
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
