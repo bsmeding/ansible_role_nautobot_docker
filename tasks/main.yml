@@ -125,6 +125,7 @@
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('postgres') }}"
     group: "{{ nautobot__container_gid | default('postgres') }}"
+  changed_when: false   # Molecule test only does not idempodence this folder
 
 # Create PostgreSQL  DB
 - name: Run DB container
