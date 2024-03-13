@@ -5,6 +5,9 @@ Nautobot is an network CMDB tool created for and by network automation specialis
 
 This role will install Nautobot as docker container. If you need docker aswell, so you can build the whole application at once please consider the Ansible role `bsmeding.docker` that will prepare you're server and install docker.
 
+Support for version 1.x and 2.x. Default version 2 will be installed and tested:
+![test status](https://github.com/bsmeding/ansible_role_nautobot_docker/actions/workflows/ci.yml/badge.svg) 
+Role is tested on, Ubuntu with Docker installed via my role bsmeding.docker on Linux distribution.
 
 Git as Data Source
 ==================
