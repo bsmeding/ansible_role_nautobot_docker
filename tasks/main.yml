@@ -88,7 +88,7 @@
     shell: /sbin/nologin
     uid: 999
     create_home: no
-    non_unique: true
+    non_unique: true   # Needed for molecule testing as 999 is already in use
     append: yes
     comment: "Postgres data user"
     state: present
@@ -105,7 +105,6 @@
   file:
     state: directory
     path: "{{ nautobot__home }}"
-    recurse: true
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
