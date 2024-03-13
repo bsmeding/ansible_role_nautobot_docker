@@ -9,14 +9,20 @@
         extensions:
           - "yml"
 
+    - name: Waits for database migrations (can take up to 5 minutes)
+      ansible.builtin.wait_for:
+        host: localhost
+        port: "{{ nautobot__port_http }}"
+        delay: 180
+
     - name: Check if Nautobot login page is running
       ansible.builtin.uri:
-        url: "http://localhost:{{ nautobot__port_http  }}"
+        url: "http://localhost:{{ nautobot__port_http }}"
         return_content: true
       register: local_webserver_output
       failed_when: local_webserver_output is failed or local_webserver_output.status != 200
       # or "'Welcome to our server' not in local_webserver_output.content"
 
     - name: Show output
-      debug:
+      ansible.builtin.debug:
         var: local_webserver_output
