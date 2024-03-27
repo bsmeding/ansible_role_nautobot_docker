@@ -192,6 +192,22 @@
     mode: "0760"
   notify: restart nautobot-stack
 
+- name: Block to copy custom_jinja_filters
+  block:
+    - name: Get all python files from role/files/custom_jinja_filters
+      ansible.builtin.find:
+        paths: "custom_jinja_filters"
+        patterns: "*.py"
+      register: role_python_files
+
+    - name: Copy files
+      ansible.builtin.copy:
+        src: "{{ item.path }}"
+        dest: "{{ nautobot__home }}/config/custom_jinja_filters"
+      loop: "{{ role_python_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+
 - name: Plugins found - build custom image
   block:
     - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"

@@ -2,6 +2,7 @@
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
 nautobot__image: nautobot:2.1
+nautobot__custom_jinja_filters_path: '{{ playbook_dir }}/files/custom_jinja_filters'
 nautobot__image_python_version: '3.9'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__install_ansible_collections:
@@ -76,6 +77,14 @@ nautobot__directories:
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
+  - path: "{{ nautobot__home }}/config/custom_jinja_filters"
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"    
+  - path: "{{ nautobot__home }}/config/custom_jinja_filters"
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"    
   - path: "{{ nautobot__home }}/logs"
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
