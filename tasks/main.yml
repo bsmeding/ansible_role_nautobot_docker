@@ -80,6 +80,7 @@
     name: postgres
     state: present
     gid: 999
+    non_unique: true       # when provisioning with molecule test or vagrant is is possible that id already in use
 
 - name: Add user "postgres"
   ansible.builtin.user:
@@ -88,7 +89,7 @@
     shell: /sbin/nologin
     uid: 999
     create_home: no
-    non_unique: true   # Needed for molecule testing as 999 is already in use
+    non_unique: true       # Needed for molecule testing as 999 is already in use
     append: yes
     comment: "Postgres data user"
     state: present
@@ -99,6 +100,7 @@
     name: nautobot
     state: present
     gid: "{{ nautobot__container_gid }}"
+    non_unique: true # when provisioning with molecule test or vagrant is is possible that id already in use
 # User cannot be created as Nautobot use 999 same as postgress and cannot be changed with ENV Vars
 
 - name: Create Nautobot home dir
@@ -192,21 +194,13 @@
     mode: "0760"
   notify: restart nautobot-stack
 
-- name: Block to copy custom_jinja_filters
-  block:
-    - name: Get all python files from role/files/custom_jinja_filters
-      ansible.builtin.find:
-        paths: "custom_jinja_filters"
-        patterns: "*.py"
-      register: role_python_files
-
-    - name: Copy files
-      ansible.builtin.copy:
-        src: "{{ item.path }}"
-        dest: "{{ nautobot__home }}/config/custom_jinja_filters"
-      loop: "{{ role_python_files.files }}"
-      loop_control:
-        label: "{{ item.path }}"
+- name: Copy custom_jinja_filters
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/custom_jinja_filters/"
+    dest: "{{ nautobot__home }}/config/custom_jinja_filters/"
+    owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
+    group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+    mode: "0760"
 
 - name: Plugins found - build custom image
   block:
