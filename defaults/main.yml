@@ -66,7 +66,8 @@ nautobot__purge_networks: false
 nautobot__env: {}
 nautobot__log_driver: json-file
 nautobot__log_options:
-
+  max-size: 10M
+  max-file: 5
 nautobot__remove_existing_home_dir: false
 nautobot__directories:
   - path: "{{ nautobot__home }}"
@@ -159,7 +160,9 @@ nautobot__postgres_env:
   POSTGRES_USER: "{{ nautobot__postgres_user }}"
   NAUTOBOT_DB_ENGINE: "django.db.backends.postgresql"
 nautobot__postgres_user_env: {}
-
+http_proxy: ''
+https_proxy: ''
+no_proxy: ''
 nautobot__extra_pip_packages: []
 nautobot__plugins: []
 # nautobot__plugins:
