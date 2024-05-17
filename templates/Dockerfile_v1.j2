@@ -20,13 +20,15 @@ RUN apt-get install -y gcc && \
     apt-get clean all && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip wheel && pip3 install django-auth-ldap
-RUN pip3 install --upgrade ansible=={{ nautobot_install_ansible_version | default('8.2.0') }}
+RUN pip3 install --upgrade pip wheel {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade setuptools {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade nautobot[ldap] {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade ansible=={{ nautobot_install_ansible_version | default('8.2.0') }} {{ nautobot__pip_install_extra_args }}
 
 # Check extra pip packages to install
 {% if nautobot__extra_pip_packages is defined %}
 {% for pip_package in nautobot__extra_pip_packages %}
-RUN pip3 install --upgrade {{ pip_package }}
+RUN pip3 install --upgrade {{ pip_package }} {{ nautobot__pip_install_extra_args }}
 
 {% endfor %}
 {% endif %}
@@ -41,9 +43,9 @@ RUN ansible-galaxy collection install {{ ansible_collection }}
 
 # Check Nautobot plugins
 {% if nautobot__plugins is defined %}
-RUN pip3 install --upgrade nornir-nautobot
+RUN pip3 install --upgrade nornir-nautobot {{ nautobot__pip_install_extra_args }}
 {% for plugin in nautobot__plugins %}
-RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% if plugin.plugin_version %}=={{ plugin.plugin_version }}{% endif %}
+RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% if plugin.plugin_version %}=={{ plugin.plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
 
 {% endfor %}
 {% endif %}

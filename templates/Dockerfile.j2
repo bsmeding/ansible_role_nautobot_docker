@@ -31,7 +31,9 @@ RUN apt-get install -y gcc && \
     apt-get clean all && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip wheel && pip3 install django-auth-ldap {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade pip wheel {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade setuptools {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade nautobot[ldap] {{ nautobot__pip_install_extra_args }}
 RUN pip3 install --upgrade ansible-core {{ nautobot__pip_install_extra_args }}
 
 # Check extra pip packages to install
