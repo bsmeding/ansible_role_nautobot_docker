@@ -40,12 +40,6 @@ RUN ansible-galaxy collection install {{ ansible_collection }}{% if nautobot__an
 {% endfor %}
 {% endif %}
 
-{% endfor %}
-{% endif %}
-
-{% endfor %}
-{% endif %}
-
 # Check Nautobot plugins
 {% if nautobot__plugins is defined %}
 RUN pip3 install --upgrade nornir-nautobot {{ nautobot__pip_install_extra_args }}
