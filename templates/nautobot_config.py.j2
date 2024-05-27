@@ -1,9 +1,12 @@
 import os
 import sys
+import ldap
 
 from nautobot.core.settings import *  # noqa F401,F403
 from nautobot.core.settings_funcs import is_truthy
+from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType, NestedGroupOfNamesType, NestedActiveDirectoryGroupType
 from custom_jinja_filters import ipaddress_filters
+
 
 #########################
 #                       #
@@ -92,8 +95,6 @@ AUTHENTICATION_BACKENDS = [
     'nautobot.core.authentication.ObjectPermissionBackend',
 ]
 
-import ldap
-
 # Server URI
 AUTH_LDAP_SERVER_URI = os.getenv("NAUTOBOT_AUTH_LDAP_SERVER_URI")
 
@@ -109,8 +110,6 @@ AUTH_LDAP_BIND_AS_AUTHENTICATING_USER = True # Needed for authenticated user gro
 
 # Include this `ldap.set_option` call if you want to ignore certificate errors. This might be needed to accept a self-signed cert.
 ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-
-from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType, NestedGroupOfNamesType, NestedActiveDirectoryGroupType
 
 # This search matches users with the sAMAccountName equal to the provided username. This is required if the user's
 # username is not in their DN (Active Directory).
@@ -134,7 +133,7 @@ AUTH_LDAP_USER_ATTR_MAP = {{ nautobot__ldap_search_users_attribute_map }}
 # GROUPS
 #AUTH_LDAP_GROUP_SEARCH = LDAPSearch("dc=example,dc=com", ldap.SCOPE_SUBTREE,"(objectClass=group)")
 #AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_group_search }}", ldap.SCOPE_SUBTREE, "(objectClass={{ nautobot__ldap_group_search_objectClass }})")
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_group_search }}", ldap.SCOPE_SUBTREE, "(objectClass={{ nautobot__ldap_group_search_objectclass }})")
 AUTH_LDAP_GROUP_TYPE = {{ nautobot__ldap_group_search_group_type }}
 
 AUTH_LDAP_MIRROR_GROUPS = {{ nautobot__ldap_mirror_groups | capitalize}}

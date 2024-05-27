@@ -202,7 +202,7 @@
     group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
     mode: "0760"
 
-- name: Plugins found - build custom image
+- name: Plugins found - build custom image (only when networktocode image is used)
   block:
     - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
       community.docker.docker_image_info:
@@ -260,12 +260,17 @@
     - name: Override image name with local Docker
       set_fact:
         nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-  when: nautobot__plugins is defined and nautobot__plugins|length>0
+  when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image != '')
 
-- name: Set Docker Hub image
+- name: Set Docker Hub image for networktocode base image
   set_fact:
     nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}"
-  when: nautobot__plugins is undefined or nautobot__plugins|length<1
+  when: nautobot__plugins is undefined or nautobot__plugins|length<1 and (nautobot__custom_image is undefined or nautobot__custom_image != '')
+
+- name: Set Docker Hub image for custom image
+  set_fact:
+    nautobot__image: "{{ nautobot__custom_image }}"
+  when: nautobot__plugins is undefined or nautobot__plugins|length<1 and nautobot__custom_image is defined and nautobot__custom_image != ''
 
 - name: Run nautobot container frontend
   community.docker.docker_container:

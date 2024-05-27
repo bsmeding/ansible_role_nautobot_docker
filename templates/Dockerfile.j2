@@ -47,7 +47,7 @@ RUN pip3 install --upgrade {{ pip_package }} {{ nautobot__pip_install_extra_args
 # Check Ansible collections
 {% if nautobot__install_ansible_collections is defined %}
 {% for ansible_collection in nautobot__install_ansible_collections %}
-RUN ansible-galaxy collection install {{ ansible_collection }}
+RUN ansible-galaxy collection install {{ ansible_collection }}{% if nautobot__ansible_collection_use_old_galaxy %} --server="https://old-galaxy.ansible.com"{% endif %} --force --ignore-certs
 
 {% endfor %}
 {% endif %}

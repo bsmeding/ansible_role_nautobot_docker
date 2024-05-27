@@ -2,12 +2,14 @@
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
 nautobot__image: nautobot:2.1
+nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
 nautobot__custom_jinja_filters_path: '{{ playbook_dir }}/files/custom_jinja_filters'
 nautobot__image_python_version: '3.9'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__install_ansible_collections:
   - ansible.netcommon
   - ansible.utils
+nautobot__ansible_collection_use_old_galaxy: false  
 nautobot__pip_install_extra_args: ''
 nautobot__port_http: 8080
 nautobot__port_https: 8444
@@ -38,7 +40,7 @@ nautobot__ldap_search_users_attribute_map: {
   "email": "mail"
 }
 nautobot__ldap_group_search: "ou=groups,dc=example,dc=com"
-nautobot__ldap_group_search_objectClass: groupOfNames
+nautobot__ldap_group_search_objectclass: group
 nautobot__ldap_group_search_group_type: GroupOfNamesType()
 nautobot__ldap_require_group: ''
 nautobot__ldap_is_active_group: ''
