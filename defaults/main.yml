@@ -9,7 +9,7 @@ nautobot__install_ansible_version: '8.2.0'
 nautobot__install_ansible_collections:
   - ansible.netcommon
   - ansible.utils
-nautobot__ansible_collection_use_old_galaxy: false  
+nautobot__ansible_collection_use_old_galaxy: false
 nautobot__pip_install_extra_args: ''
 nautobot__port_http: 8080
 nautobot__port_https: 8444
