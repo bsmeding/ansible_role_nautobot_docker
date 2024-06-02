@@ -1,3 +1,6 @@
 ---
 roles:
   - src: bsmeding.docker
+collections:
+  - src: community.docker
+  - src: community.general
