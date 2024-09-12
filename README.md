@@ -1,8 +1,12 @@
 Nautobot
 ========
 
+__Please only install the version when CI is PASSING!__
+
 ![test status](https://github.com/bsmeding/ansible_role_nautobot_docker/actions/workflows/ci.yml/badge.svg) 
 Role is tested on, Ubuntu with Docker installed via my role bsmeding.docker on Linux distribution.
+
+Downloads: ![Ansible Role](https://img.shields.io/ansible/role/d/bsmeding/nautobot_docker)
 
 Nautobot is an network CMDB tool created for and by network automation specialist from NetworkToCode. It is an fork from Netbox (2.x) and added with a lot af nice features to create a Single Source of Trouth for your automation platform.
 
@@ -86,7 +90,7 @@ To change the superuser login and or ports: (see all possible variables in ./def
 
 Manual config tasks
 ===================
-Some tasks needs to be set manual (at this moment, try to update repo so that this can be done automatically, but need to rely on the API possibilities of Nautobot)
+Some tasks needs to be set manual if needed (at this moment, try to update repo so that this can be done automatically, but need to rely on the API possibilities of Nautobot). But without setting this Nautobot is fully functional as well.
 
 Manual tasks:
 * Add git repositories
@@ -95,7 +99,7 @@ Manual tasks:
 * Add users to groups
 * Add Git repositories for Golden config and job sync
 
-* Add GraphQL queries so that the variables can be retreived in the Jinja templating (Extensibility -> GrpahSQL Queries)
+* Add GraphQL queries so that the variables can be retreived in the Jinja templating (Extensibility -> GraphQL Queries)
 
 Examplje GraphQL
 

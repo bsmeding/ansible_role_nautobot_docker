@@ -21,6 +21,9 @@ RUN apt-get update -y && apt-get install -y libldap2-dev libsasl2-dev libssl-dev
 # Root install SAML dependencies # Removed llibxmlsec1-dev 17-09-23
 RUN apt-get update -y && apt-get install -y libxmlsec1-openssl pkg-config 
 
+# Install network tools used by Jobs
+RUN apt-get update -y && apt-get install -y net-tools iputils-ping  dnsutils
+
 # ---------------------------------
 # Stage: Builder
 # ---------------------------------
@@ -34,7 +37,7 @@ RUN apt-get install -y gcc && \
 RUN pip3 install --upgrade pip wheel {{ nautobot__pip_install_extra_args }}
 RUN pip3 install --upgrade setuptools {{ nautobot__pip_install_extra_args }}
 RUN pip3 install --upgrade nautobot[ldap]=={{ (nautobot__image | split(':'))[1] }} {{ nautobot__pip_install_extra_args }}
-RUN pip3 install --upgrade ansible-core=={{ nautobot_install_ansible_version | default('2.16.6') }}  {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade ansible-core=={{ nautobot_install_ansible_version | default('2.15.10') }}  {{ nautobot__pip_install_extra_args }}
 
 # Check extra pip packages to install
 {% if nautobot__extra_pip_packages is defined %}
