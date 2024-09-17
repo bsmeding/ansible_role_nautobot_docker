@@ -1,8 +1,8 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:2.1
-nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
+nautobot__image: nautobot:2.3
+# nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
 nautobot__custom_jinja_filters_path: '{{ playbook_dir }}/files/custom_jinja_filters'
 nautobot__image_python_version: '3.9'
 nautobot__install_ansible_version: '8.2.0'
