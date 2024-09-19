@@ -292,6 +292,11 @@
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
 
+- name: Pause for starting worker (exampel when migrations are needed)
+  pause:
+    seconds: "{{ nautobot__pause_before_start_worker }}"
+  when: nautobot__pause_before_start_worker is defined
+
 - name: Run nautobot worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-worker"
