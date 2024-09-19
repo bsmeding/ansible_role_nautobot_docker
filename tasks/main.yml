@@ -299,7 +299,7 @@
 
 - name: Run nautobot worker
   community.docker.docker_container:
-    name: "{{ nautobot__name }}-worker-{{ item + 1 }}"
+    name: "{{ nautobot__name }}-worker-{{ item }}"
     image: "{{ nautobot__image }}"
     restart_policy: always
     networks:
@@ -322,7 +322,7 @@
 
 - name: Run celery worker
   community.docker.docker_container:
-    name: "{{ nautobot__name }}-celery-worker"
+    name: "{{ nautobot__name }}-celery-worker-{{ item }}"
     image: "{{ nautobot__image }}"
     restart_policy: always
     networks:
@@ -335,6 +335,7 @@
     command: "nautobot-server celery worker -l {{ nautobot__log_level }}"
     # command_handling: "compatibility"
     # tty: true
+  with_sequence: "start=0 end={{ nautobot__number_of_workers | default(1) }}"
 
 - name: Run celery beat
   community.docker.docker_container:
