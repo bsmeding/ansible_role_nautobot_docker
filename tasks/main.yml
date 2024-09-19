@@ -335,6 +335,12 @@
     command: "nautobot-server celery worker -l {{ nautobot__log_level }}"
     # command_handling: "compatibility"
     # tty: true
+    healthcheck:
+      interval: "30s"
+      timeout: "10s"
+      start_period: "30s"
+      retries: 3
+      test: ["CMD", "bash", "-c", "nautobot-server celery worker -l {{ nautobot__log_level }} --events"]    
   with_sequence: "start=0 end={{ nautobot__number_of_workers | default(1) }}"
 
 - name: Run celery beat
