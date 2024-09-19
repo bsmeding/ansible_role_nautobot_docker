@@ -2,10 +2,12 @@
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
 nautobot__image: nautobot:2.3
+
 # nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
 nautobot__custom_jinja_filters_path: '{{ playbook_dir }}/files/custom_jinja_filters'
 nautobot__image_python_version: '3.9'
 nautobot__install_ansible_version: '8.2.0'
+nautobot__number_of_workers: 1
 nautobot__install_ansible_collections:
   - ansible.netcommon
   - ansible.utils
@@ -13,6 +15,9 @@ nautobot__ansible_collection_use_old_galaxy: false
 nautobot__pip_install_extra_args: ''
 nautobot__port_http: 8080
 nautobot__port_https: 8444
+nautobot__url: "http://localhost:{{ nautobot__port_http }}" # Please adjust for your environment
+nautobot__csrf_trusted_origins:
+  - "{{ nautobot__url }}"
 nautobot__home: "/opt/{{ nautobot__name }}"
 nautobot__superuser_name: admin
 nautobot__superuser_password: admin
