@@ -15,6 +15,7 @@ nautobot__ansible_collection_use_old_galaxy: false
 nautobot__pip_install_extra_args: ''
 nautobot__port_http: 8080
 nautobot__port_https: 8444
+nautobot__pause_before_start_worker: 0
 nautobot__url: "http://localhost:{{ nautobot__port_http }}" # Please adjust for your environment
 nautobot__csrf_trusted_origins:
   - "{{ nautobot__url }}"
