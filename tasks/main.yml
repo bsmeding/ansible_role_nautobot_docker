@@ -299,7 +299,7 @@
 
 - name: Run nautobot worker
   community.docker.docker_container:
-    name: "{{ nautobot__name }}-worker-{{ item}}"
+    name: "{{ nautobot__name }}-worker-{{ item + 1 }}"
     image: "{{ nautobot__image }}"
     restart_policy: always
     networks:
@@ -317,7 +317,7 @@
       start_period: "5s"
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
-  with_sequence: "start=1 end={{ nautobot__number_of_workers | default(1) }}"
+  with_sequence: "start=0 end={{ nautobot__number_of_workers | default(1) }}"
   when: nautobot__install_worker| bool
 
 - name: Run celery worker
