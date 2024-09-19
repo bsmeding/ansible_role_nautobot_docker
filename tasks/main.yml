@@ -332,7 +332,7 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    command: "nautobot-server celery worker -l {{ nautobot__log_level }}"
+    command: "nautobot-server celery worker -n node{{ item }} -l {{ nautobot__log_level }}"
     # command_handling: "compatibility"
     # tty: true
     healthcheck:
