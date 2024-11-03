@@ -26,6 +26,7 @@ nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz" # Max 40 c
 nautobot__secret_key: 012345678901234567890123456789012345678901234567890123456789
 nautobot__napalm_username: cisco
 nautobot__napalm_password: cisco
+nautobot__napalm_args: {}
 nautobot__install_own_postgres_db: true
 nautobot__postgres_name: nautobot-db
 nautobot__postgres_image: postgres:13 # Apple Silicon have issues with 14, no need for nautobot to go to 14

@@ -315,3 +315,7 @@ nautobot__plugins:
 * Add variables to readme
 * Variable more the nautobot_config.py, now there are a lot of static config lines
 * add uwsgi template to variables
+
+
+# Migrating from v1 to v2
+If you are migrating from Nautobot version 1 to Nautobot version 2, set the variable `nautobot__pause_before_start_worker` to minimum of `600` seconds zo the database can be migrated before the workers starting.
