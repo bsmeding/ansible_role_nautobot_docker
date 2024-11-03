@@ -1,105 +1,185 @@
-Nautobot
-========
 
-__Please only install the version when CI is PASSING!__
+# Nautobot Docker Installation with Ansible
 
-![test status](https://github.com/bsmeding/ansible_role_nautobot_docker/actions/workflows/ci.yml/badge.svg) 
-Role is tested on, Ubuntu with Docker installed via my role bsmeding.docker on Linux distribution.
+![Nautobot Logo](https://raw.githubusercontent.com/nautobot/nautobot/develop/nautobot/docs/nautobot_logo.svg)
 
-Downloads: ![Ansible Role](https://img.shields.io/ansible/role/d/bsmeding/nautobot_docker)
+[![CI Status](https://github.com/bsmeding/ansible_role_nautobot_docker/actions/workflows/ci.yml/badge.svg)](https://github.com/bsmeding/ansible_role_nautobot_docker/actions/workflows/ci.yml)
+![Downloads](https://img.shields.io/ansible/role/d/bsmeding/nautobot_docker)
 
-Nautobot is an network CMDB tool created for and by network automation specialist from NetworkToCode. It is an fork from Netbox (2.x) and added with a lot af nice features to create a Single Source of Trouth for your automation platform.
+> **Please install only when CI is PASSING!**
 
-This role will install Nautobot as docker container. If you need docker aswell, so you can build the whole application at once please consider the Ansible role `bsmeding.docker` that will prepare you're server and install docker.
+This role installs Nautobot as a Docker container on Ubuntu, with Docker installed via the `bsmeding.docker` role. For a full setup, use `bsmeding.docker` for Docker installation, followed by `bsmeding.nautobot_docker` for Nautobot.
 
+---
 
-Git as Data Source
-==================
+## About Nautobot
 
-Read more https://docs.nautobot.com/projects/core/en/v1.0.0/user-guides/git-data-source/
-https://docs.nautobot.com/projects/core/en/v1.0.0/models/extras/configcontext/
+Nautobot is a network CMDB tool, originally a fork of NetBox, tailored for network automation. It serves as a single source of truth, enhancing network management and automation.
 
-Install Nautobot docker
-=======================
+### Application Stack
 
-Example playbook to install Nautobot on Docker container
+Overview of the Nautobot application stack:
 
-Basic install: (Create/ use an inventory with group nautobot or change hosts)
+![Application Stack Diagram](https://raw.githubusercontent.com/nautobot/nautobot/develop/nautobot/docs/media/nautobot_application_stack_high_level.png)
 
-Install pip requirementes on ansible host
-`pip install -r requirements.txt` # NOTE .txt for Python install
+---
 
-First install requirements.yml file:
+## Installation Guide
 
-```
+### Prerequisites
+- Install pip requirements on the Ansible host:
+  ```bash
+  pip install -r requirements.txt
+  ```
+
+### Role Requirements
+Add the following roles to your `requirements.yml` file:
+```yaml
 roles:
-- name: bsmeding.docker
-- name: bsmeding.nautobot_docker
+  - name: bsmeding.docker
+  - name: bsmeding.nautobot_docker
+```
+Install these roles with:
+```bash
+ansible-galaxy install -r requirements.yml
 ```
 
-Install the required roles:
-`ansible-galaxy install -r requirements.yml`
+### Example Playbook
 
-
-Run playbook to install Docker and Nautobot
-```
+```yaml
 ---
 - name: Install Nautobot
   hosts: [nautobot]
   gather_facts: true
   become: yes
   tasks:
-    - name: Check if docker is installed
+    - name: Check if Docker is installed
       include_role:
         name: bsmeding.docker
 
-    - name: Check if nautobot is installed
+    - name: Check if Nautobot is installed
       include_role:
         name: bsmeding.nautobot_docker
-
 ```
-After succesfull installation, Nautobot runs on port 8080 (default), login is admin/admin
 
-To change the superuser login and or ports: (see all possible variables in ./defaults/main.yml)
+> After successful installation, Nautobot will run on port `8080` by default, with login credentials `admin/admin`.
 
-```
 ---
-- name: Install Nautobot
-  hosts: [nautobot]
-  gather_facts: true
-  become: yes
-  vars:
-    nautobot__superuser_name: admin
-    nautobot__superuser_password: mysupersecretpassword
-    nautobot__port_http: 8888
-    nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz0987"
-    nautobot__napalm_username: cisco
-    nautobot__napalm_password: cisco    
-  tasks:
-    - name: Check if docker is installed
-      include_role:
-        name: bsmeding.docker
 
-    - name: Check if nautobot is installed
-      include_role:
-        name: bsmeding.nautobot_docker
+## Configuration Options
 
+Below are key variables for customizing the Nautobot Docker installation. These variables can be added to your playbook or a separate variable file.
 
+### General Settings
+
+- **`container_time_zone`**: Sets the timezone inside the container.
+  - Default: `'Europe/Amsterdam'`
+
+- **`nautobot__name`**: Defines the name of the Nautobot Docker container.
+  - Default: `'nautobot'`
+
+- **`nautobot__image`**: Specifies the Docker image for Nautobot.
+  - Default: `'nautobot:2.3'`
+
+### Python & Ansible Configuration
+
+- **`nautobot__image_python_version`**: Python version to be used in the container.
+  - Default: `'3.9'`
+
+- **`nautobot__install_ansible_version`**: The Ansible version to install in the container.
+  - Default: `'8.2.0'`
+
+- **`nautobot__install_ansible_collections`**: List of Ansible collections to install in the container.
+  - Default: `['ansible.netcommon', 'ansible.utils']`
+
+- **`nautobot__pip_install_extra_args`**: Extra arguments for `pip` installations, useful for skipping SSL checks or using a custom PIP server.
+
+### Network & Port Configuration
+
+- **`nautobot__port_http`**: The HTTP port Nautobot will run on.
+  - Default: `8080`
+
+- **`nautobot__port_https`**: The HTTPS port Nautobot will run on if enabled.
+  - Default: `8444`
+
+- **`nautobot__allowed_hosts`**: Specifies which hosts are allowed to access Nautobot.
+  - Default: `'*'`
+
+### Container & Environment Configuration
+
+- **`nautobot__home`**: Directory path where Nautobot is installed in the container.
+  - Default: `"/opt/{{ nautobot__name }}"`
+
+- **`nautobot__number_of_workers`**: Sets the number of worker processes for handling requests.
+  - Default: `1`
+
+- **`nautobot__pause_before_start_worker`**: Time in seconds to pause before starting workers, useful in migrations.
+  - Default: `0`
+
+- **`nautobot__remove_existing_container`**: Whether to remove an existing container on redeployment.
+  - Default: `false`
+
+- **`nautobot__pull_image`**: Whether to pull the latest Docker image on deployment.
+  - Default: `true`
+
+### User & Permissions Configuration
+
+- **`nautobot__container_uid`**: User ID for the Nautobot container.
+  - Default: `999`
+
+- **`nautobot__container_gid`**: Group ID for the Nautobot container.
+  - Default: `998`
+
+- **`nautobot__directories`**: List of directories to create with specific permissions.
+  - Example:
+    ```yaml
+    nautobot__directories:
+      - path: "/opt/nautobot"
+        mode: "0760"
+        owner: "{{ nautobot__container_uid }}"
+        group: "{{ nautobot__container_gid }}"
+    ```
+
+### Superuser Credentials
+
+> **Important**: Change these values in production environments.
+
+- **`nautobot__superuser_name`**: Username for the default superuser.
+  - Default: `'admin'`
+
+- **`nautobot__superuser_password`**: Password for the default superuser.
+  - Default: `'admin'`
+
+- **`nautobot__superuser_api_token`**: API token for the superuser, must be 40 characters or fewer.
+  - Example: `"1234567890abcdefghijklmnopqrstuvwxyz0987"`
+
+---
+
+## Additional Configuration
+
+### Installing Plugins
+
+To install plugins, set the `nautobot__plugins` variable with plugin configurations. Example:
+
+```yaml
+nautobot__plugins:
+  - plugin_name: nautobot_device_onboarding
+    plugin_config: {
+      "nautobot_device_onboarding": {
+        "default_ip_status": "Active",
+        "default_device_role": "onboarding",
+      }
+    }
+  - plugin_name: nautobot-golden-config
+    plugin_config: {
+      "nautobot_golden_config": {
+        "enable_intended": True,
+        "sot_agg_transposer": None,
+      }
+    }
 ```
 
-
-Manual config tasks
-===================
-Some tasks needs to be set manual if needed (at this moment, try to update repo so that this can be done automatically, but need to rely on the API possibilities of Nautobot). But without setting this Nautobot is fully functional as well.
-
-Manual tasks:
-* Add git repositories
-* Add LDAP groups (when not synct from LDAP server)
-* Add permission to group
-* Add users to groups
-* Add Git repositories for Golden config and job sync
-
-* Add GraphQL queries so that the variables can be retreived in the Jinja templating (Extensibility -> GraphQL Queries)
+Add GraphQL queries so that the variables can be retreived in the Jinja templating (Extensibility -> GraphQL Queries)
 
 Examplje GraphQL
 
@@ -193,129 +273,27 @@ query ($device_id: ID!) {
   }
 }
 ````
+### Custom Python or OS Packages
 
+- **`nautobot__extra_pip_packages`**: Add additional Python packages needed in the container.
+- **`nautobot__extra_os_packages`**: Add extra OS packages as necessary.
 
-* Configure golden-config plugin with Git repo, template path and SSot (GraphQL) query
+### Migrating from v1 to v2
 
+If migrating from Nautobot v1 to v2, set `nautobot__pause_before_start_worker` to at least `600` seconds to allow the database to migrate before starting workers.
 
-# Error handling
-When the stack doesn't start after a hard shutdown of the VM (no containers shutdown but VM is hard shutdown) is it possible that Redis file is corrupt. You see the message `Bad file format reading the append only file appendonly.aof.1.incr.aof: make a backup of your AOF file, then use ./redis-check-aof --fix <filename.manifest>`
-Then find the Docker path (`docker inspect nautobot-redis`) and go to this folder
-Run the check command `sudo redis-check-aof --fix appendonly.aof.1.incr.aof`
+---
 
-# computed fields
+## Error Handling
 
-## Ansible slug
-To set correct ansible vendor plugin, add a computed field, named: `Ansible Network OS` type `dcim|platform` and slug: `ansible_network_os`
-content:
-```
-{% if obj.slug == 'arista_eos' %}
-arista.eos.eos
-{% elif obj.slug == 'cisco_asa' %}
-cisco.asa.asa
-{% elif obj.slug == 'cisco_ios' %}
-cisco.ios.ios
-{% elif obj.slug == 'cisco_xr' %}
-cisco.iosxr.iosxr
-{% elif obj.slug == 'cisco_xe' %}
-cisco.ios.ios
-{% elif obj.slug == 'cisco_nxos' %}
-cisco.nxos.nxos
-{% elif obj.slug == 'juniper_junos' %}
-junipernetworks.junos.junos
-{% else %}
-{% endif %}
+If the stack doesn’t start after a hard shutdown (e.g., due to Redis corruption), you might see an error message about the `appendonly.aof` file. Use the following command to fix this issue:
+
+```bash
+sudo redis-check-aof --fix appendonly.aof
 ```
 
-# Install plugins
-To install plugins, set the variable `nautobot__plugins` with the desired plugins to install, example:
+For additional troubleshooting, check the Docker logs and inspect paths with `docker inspect nautobot-redis`.
 
-```
-nautobot__plugins:
-  - plugin_name: nautobot_device_onboarding
-    plugin_config: {
-          "nautobot_device_onboarding": {
-            "default_ip_status": "Active",
-            "default_device_role": "onboarding",
-            "skip_device_type_on_update": True,
-          }
-        }
-  - plugin_name: nautobot-ssot
-    plugin_config: {}
-  - plugin_name: nautobot-plugin-nornir
-    plugin_config: {
-      "nautobot_plugin_nornir": {
-        "use_config_context": {"secrets": False, "connection_options": True},
-        # Optionally set global connection options.
-        "connection_options": {
-            "napalm": {
-                "extras": {
-                    "optional_args": {"global_delay_factor": 1},
-                },
-            },
-            "netmiko": {
-                "extras": {
-                    "global_delay_factor": 1,
-                },
-            },
-        },
-        "nornir_settings": {
-            "credentials": "nautobot_plugin_nornir.plugins.credentials.env_vars.CredentialsEnvVars",
-            "runner": {
-                "plugin": "threaded",
-                "options": {
-                    "num_workers": 20,
-                },
-            },
-        },
-      }
-    }
-  - plugin_name: nautobot-golden-config
-    plugin_config: {
-        "nautobot_golden_config": {
-          "per_feature_bar_width": 0.15,
-          "per_feature_width": 13,
-          "per_feature_height": 4,
-          "enable_backup": False,
-          "enable_compliance": False,
-          "enable_intended": True,
-          "enable_sotagg": True,
-          "sot_agg_transposer": None,
-          "enable_postprocessing": False,
-          "postprocessing_callables": [],
-          "postprocessing_subscribed": [],
-          "platform_slug_map": None,
-          # "get_custom_compliance": "my.custom_compliance.func"
-        }
-    }
-  - plugin_name: nautobot-device-lifecycle-mgmt
-    plugin_config: {
-        "nautobot_device_lifecycle_mgmt": {
-            "barchart_bar_width": float(0.1)),
-            "barchart_width": int(12),
-            "barchart_height": int(5),
-        }
-    }
-  - plugin_name: nautobot-firewall-models
-    plugin_config: {
-        "nautobot_firewall_models": {
-            "default_status": "active"
-        }
-    }
-  - plugin_name: nautobot-ssot
-    plugin_config: {
-        "nautobot_ssot": {
-            "hide_example_jobs": True,
-        }
-  }
-```
+---
 
-# TODO
-
-* Add variables to readme
-* Variable more the nautobot_config.py, now there are a lot of static config lines
-* add uwsgi template to variables
-
-
-# Migrating from v1 to v2
-If you are migrating from Nautobot version 1 to Nautobot version 2, set the variable `nautobot__pause_before_start_worker` to minimum of `600` seconds zo the database can be migrated before the workers starting.
+By following this guide, you’ll have a fully configured Nautobot deployment in Docker using Ansible.

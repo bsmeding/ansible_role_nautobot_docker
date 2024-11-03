@@ -27,8 +27,10 @@ galaxy_info:
       versions:
         - all
   galaxy_tags:
-    - awx
-    - tower
-    - ansible
+    - nautobot
     - docker
+    - ssot
+    - ipam
+    - dcim
+    - netdevops
 dependencies: []
