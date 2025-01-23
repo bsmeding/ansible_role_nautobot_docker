@@ -1,7 +1,7 @@
 ---
 - name: Check variables
   ansible.builtin.assert:
-    that: "{{ item.assert }}"
+    that: item.assert
     fail_msg: "{{ item.fail_msg}}"
   with_items:
     - assert: "nautobot__name is defined and nautobot__name != ''"
