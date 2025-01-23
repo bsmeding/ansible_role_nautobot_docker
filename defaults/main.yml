@@ -115,6 +115,7 @@ nautobot__directory_volumes:
   - "{{ nautobot__home }}/media:/opt/nautobot/media"
   - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
   - "{{ nautobot__home }}/static:/opt/nautobot/static"
+  - "{{ nautobot__home }}/config/custom_jinja_filters:/opt/nautobot/config/custom_jinja_filters"
 nautobot__file_volumes:
   - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
 nautobot__postgres_directory_volumes:
