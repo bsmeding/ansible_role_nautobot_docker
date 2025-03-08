@@ -1,11 +1,11 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:2.3
+nautobot__image: nautobot:2.4
 
 # nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
 nautobot__custom_jinja_filters_path: 'files/custom_jinja_filters'
-nautobot__image_python_version: '3.9'
+nautobot__image_python_version: '3.11'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__number_of_workers: 1
 nautobot__install_ansible_collections:
@@ -136,6 +136,7 @@ nautobot__default_env:
   NAUTOBOT_DOCKER_SKIP_INIT: "false"
   NAUTOBOT_NAPALM_USERNAME: "{{ nautobot__napalm_username }}"
   NAUTOBOT_NAPALM_PASSWORD: "{{ nautobot__napalm_password }}"
+  NAUTOBOT_ROOT: "/opt/nautobot"
   NAUTOBOT_CONFIG: "/opt/nautobot/config/nautobot_config.py"
   NAUTOBOT_DB_HOST: "{{ nautobot__postgres_name }}"
   NAUTOBOT_DB_NAME: nautobot
