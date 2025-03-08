@@ -4,7 +4,7 @@ nautobot__name: nautobot
 nautobot__image: nautobot:2.3
 
 # nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
-nautobot__custom_jinja_filters_path: '{{ playbook_dir }}/files/custom_jinja_filters'
+nautobot__custom_jinja_filters_path: 'files/custom_jinja_filters'
 nautobot__image_python_version: '3.9'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__number_of_workers: 1
@@ -115,9 +115,9 @@ nautobot__directory_volumes:
   - "{{ nautobot__home }}/media:/opt/nautobot/media"
   - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
   - "{{ nautobot__home }}/static:/opt/nautobot/static"
-nautobot__file_volumes:
-  - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
-  - "{{ nautobot__home }}/config/custom_jinja_filters/ipaddress_filters.py:/opt/nautobot/config/ipaddress_filters.py"
+  - "{{ nautobot__home }}/config:/opt/nautobot/config"
+nautobot__file_volumes: []
+  # - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
 nautobot__postgres_directory_volumes:
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
@@ -136,7 +136,7 @@ nautobot__default_env:
   NAUTOBOT_DOCKER_SKIP_INIT: "false"
   NAUTOBOT_NAPALM_USERNAME: "{{ nautobot__napalm_username }}"
   NAUTOBOT_NAPALM_PASSWORD: "{{ nautobot__napalm_password }}"
-  NAUTOBOT_CONFIG: "/opt/nautobot/nautobot_config.py"
+  NAUTOBOT_CONFIG: "/opt/nautobot/config/nautobot_config.py"
   NAUTOBOT_DB_HOST: "{{ nautobot__postgres_name }}"
   NAUTOBOT_DB_NAME: nautobot
   NAUTOBOT_DB_PASSWORD: "{{ nautobot__postgres_password }}"
