@@ -46,7 +46,7 @@
         state: absent
     - name: Remove Celery Worker
       docker_container:
-        name: "{{ nautobot__name }}-celery-worker"
+        name: "{{ nautobot__name }}-celery-worker-1"
         state: absent
     - name: Remove Celery Beat
       docker_container:
@@ -340,6 +340,7 @@
 - name: Run celery worker
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-worker-{{ item }}"
+    hostname: "worker{{ item }}"
     image: "{{ nautobot__image }}"
     restart_policy: always
     networks:
@@ -349,7 +350,7 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    command: "nautobot-server celery worker -n node{{ item }} -l {{ nautobot__log_level }}"
+    command: "nautobot-server celery worker -n node{{ item }}@%h -l {{ nautobot__log_level }}"
     # command_handling: "compatibility"
     # tty: true
     healthcheck:
@@ -371,7 +372,7 @@
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
-    volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
+    volumes: "{{ nautobot__directory_volumes + nautobot__celerybeat_directory_volumes + nautobot__file_volumes }}"
     command: "nautobot-server celery beat -l {{ nautobot__log_level }}"
     #  command_handling: "compatibility"
     # tty: true

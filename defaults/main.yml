@@ -1,7 +1,7 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:2.4
+nautobot__image: nautobot:2.4.4
 
 # nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
 nautobot__custom_jinja_filters_path: 'files/custom_jinja_filters'
@@ -107,6 +107,10 @@ nautobot__directories:
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
+  - path: "{{ nautobot__home }}/celerybeat_data"
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
 nautobot__ports:
   - "{{ nautobot__port_http }}:8080"
   - "{{ nautobot__port_https }}:8443"
@@ -116,6 +120,8 @@ nautobot__directory_volumes:
   - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
   - "{{ nautobot__home }}/static:/opt/nautobot/static"
   - "{{ nautobot__home }}/config:/opt/nautobot/config"
+nautobot__celerybeat_directory_volumes:
+  - "{{ nautobot__home }}/celerybeat_data:/opt/nautobot/celerybeat"
 nautobot__file_volumes: []
   # - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
 nautobot__postgres_directory_volumes:
