@@ -275,19 +275,19 @@
       when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
     - name: Override image name with local Docker
-      set_fact:
+      ansible.builtin.set_fact:
         nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-  when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image != '')
+  when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image == '')
 
 - name: Set Docker Hub image for networktocode base image
-  set_fact:
-    nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}"
-  when: nautobot__plugins is undefined or nautobot__plugins|length<1 and (nautobot__custom_image is undefined or nautobot__custom_image != '')
+  ansible.builtin.set_fact:
+    nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.11') }}"
+  when: nautobot__custom_image is undefined or nautobot__custom_image == ''
 
 - name: Set Docker Hub image for custom image
-  set_fact:
+  ansible.builtin.set_fact:
     nautobot__image: "{{ nautobot__custom_image }}"
-  when: nautobot__plugins is undefined or nautobot__plugins|length<1 and nautobot__custom_image is defined and nautobot__custom_image != ''
+  when: nautobot__custom_image is defined and nautobot__custom_image != ''
 
 - name: Run nautobot container frontend
   community.docker.docker_container:
@@ -309,7 +309,7 @@
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
 
-- name: Pause for starting worker (exampel when migrations are needed)
+- name: Pause for starting worker (for example when migrations are needed)
   pause:
     seconds: "{{ nautobot__pause_before_start_worker }}"
   when: nautobot__pause_before_start_worker is defined
@@ -377,16 +377,7 @@
     #  command_handling: "compatibility"
     # tty: true
 
-- name: Construct plugin config
-  block:
-    - name: Create Plugins list
-      set_fact:
-        nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
-    - name: Construct plugin config
-      set_fact:
-        nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
-      with_items: "{{ nautobot__plugins }}"
-  when: nautobot__plugins is defined and nautobot__plugins|length>0
+
 
 # - name: Copy uWSGI
 #   template:
