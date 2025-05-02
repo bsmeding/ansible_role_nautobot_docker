@@ -35,6 +35,7 @@ nautobot__postgres_password: nautobotdbpassword
 nautobot__postgres_data_dir: "{{ nautobot__home }}/pgdocker/{{ (nautobot__postgres_image | split(':'))[1] }}/data"
 nautobot__redis_hostname: "{{ nautobot__name }}-redis"
 nautobot__redis_password: nautobotredispassw
+nautobot__redis_data_dir: "{{ nautobot__home }}/redis"
 nautobot__ldap_auth_server_ip: ''
 nautobot__ldap_auth_server_port: 389
 nautobot__ldap_auth_bind_dn: "CN=readonly,OU=people,DC=example,DC=com"
@@ -127,6 +128,8 @@ nautobot__file_volumes: []
   # - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
 nautobot__postgres_directory_volumes:
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
+nautobot__redis_directory_volumes:
+  - "{{ nautobot__redis_data_dir }}:/data"
 nautobot__default_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
@@ -169,7 +172,7 @@ nautobot__redis_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
   GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
-  NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
+  REDIS_PASSWORD: "{{ nautobot__redis_password }}"
 nautobot__postgres_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
