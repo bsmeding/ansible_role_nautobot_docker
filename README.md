@@ -81,6 +81,9 @@ Below are key variables for customizing the Nautobot Docker installation. These 
 - **`nautobot__image`**: Specifies the Docker image for Nautobot.
   - Default: `'nautobot:2.3'`
 
+- **`nautobot__custom_image`**: Specifies a custom Nautobot image
+  - Example: `'bsmeding/nautobot:2.3'`
+  - 
 ### Python & Ansible Configuration
 
 - **`nautobot__image_python_version`**: Python version to be used in the container.
@@ -160,6 +163,8 @@ Below are key variables for customizing the Nautobot Docker installation. These 
 ### Installing Plugins
 
 To install plugins, set the `nautobot__plugins` variable with plugin configurations. Example:
+
+**Please NOTE** that plugins are NOT INSTALLED in custom images, only when using Networktocode Docker images!!
 
 ```yaml
 nautobot__plugins:
