@@ -161,14 +161,9 @@
     log_options: "{{ nautobot__log_options }}"
   when: nautobot__install_own_postgres_db
 
-- name: Check redis directorie exists
-  ansible.builtin.file:
-    state: directory
-    path: "{{ nautobot__redis_data_dir }}"
-    mode: "0770"
-    owner: "{{ docker_uid | default('root') }}"
-    group: "{{ docker_gid | default('root') }}"
-  changed_when: false   # Molecule test only does not idempodence this folder
+- name: Create a volume
+  community.docker.docker_volume:
+    name: nautobot_redis
 
 # Set vm.overcommit_memory to 1 in /etc/sysctl.conf
 - name: Ensure memory overcommit is enabled for Redis
@@ -183,12 +178,13 @@
     name: "{{ nautobot__name }}-redis"
     image: "{{ nautobot__redis_image }}"
     pull: "{{ nautobot__pull_image }}"
+    # user: "{{ docker_uid | default(1000) }}:{{ docker_gid | default(1000) }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks:
       - name: "{{ nautobot__network_name }}"
     env: "{{ nautobot__redis_env }}"
-    volumes: "{{ nautobot__redis_directory_volumes }}"
+    volumes: "nautobot_redis:/data"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}"
