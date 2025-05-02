@@ -151,6 +151,7 @@
   docker_container:
     name: "{{ nautobot__postgres_name }}"
     image: "{{ nautobot__postgres_image }}"
+    pull: "{{ nautobot__pull_image }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -163,7 +164,7 @@
 - name: Run nautobot Redis
   community.docker.docker_container:
     name: "{{ nautobot__name }}-redis"
-    image: "redis:alpine"
+    image: "{{ nautobot__redis_image }}"
     pull: "{{ nautobot__pull_image }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
