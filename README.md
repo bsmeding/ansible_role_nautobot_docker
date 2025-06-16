@@ -289,6 +289,31 @@ If migrating from Nautobot v1 to v2, set `nautobot__pause_before_start_worker` t
 
 ---
 
+## Celery workers
+To increase the workers, change the variable `nautobot__number_of_workers` to desired workers, please note these will run on the same host.
+
+
+Check if celery workers are online:
+
+Exec into nautobot containers: `docker exec -it nautobot /bin/bash`
+
+Then load settings: `export DJANGO_SETTINGS_MODULE=nautobot_config`
+Then execute: `celery -A nautobot.core.celery:app status`
+
+Example:
+```bash
+nautobot@fc53117bd332:~$ export DJANGO_SETTINGS_MODULE=nautobot_config
+
+celery -A nautobot.core.celery:app status
+
+->  node1@worker1: OK
+
+1 node online.
+
+nautobot@fc53117bd332:~$
+```
+
+
 ## Error Handling
 
 If the stack doesn’t start after a hard shutdown (e.g., due to Redis corruption), you might see an error message about the `appendonly.aof` file. Use the following command to fix this issue:

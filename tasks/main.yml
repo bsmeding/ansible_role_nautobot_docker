@@ -159,6 +159,7 @@
     volumes: "{{ nautobot__postgres_directory_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
+    command: ["postgres", "-c", "max_connections={{ nautobot__postgres_max_connections }}"]
   when: nautobot__install_own_postgres_db
 
 - name: Create a volume
@@ -235,6 +236,7 @@
     mode: "0760"
 
 - name: Plugins found - build custom image (only when networktocode image is used)
+  when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image == '')
   block:
     - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
       community.docker.docker_image_info:
@@ -292,7 +294,7 @@
     - name: Override image name with local Docker
       ansible.builtin.set_fact:
         nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-  when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image == '')
+  
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:
@@ -365,15 +367,15 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
-    command: "nautobot-server celery worker -n node{{ item }}@%h -l {{ nautobot__log_level }}"
+    command: "nautobot-server celery worker -n worker{{ item }} -l {{ nautobot__log_level }}"
     # command_handling: "compatibility"
     # tty: true
     healthcheck:
-      interval: "30s"
-      timeout: "10s"
-      start_period: "30s"
+      test: ["CMD-SHELL", "celery -A nautobot.core.celery:app status --timeout=5 | grep worker"]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      test: ["CMD", "bash", "-c", "nautobot-server celery worker -l {{ nautobot__log_level }} --events"]    
+      start_period: 30s
   with_sequence: "start=1 end={{ nautobot__number_of_workers | default(1) }}"
 
 - name: Run celery beat

@@ -33,6 +33,7 @@ nautobot__postgres_image: postgres:13 # Apple Silicon have issues with 14, no ne
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
 nautobot__postgres_data_dir: "{{ nautobot__home }}/pgdocker/{{ (nautobot__postgres_image | split(':'))[1] }}/data"
+nautobot__postgres_max_connections: 100
 nautobot__redis_hostname: "{{ nautobot__name }}-redis"
 nautobot__redis_password: nautobotredispassw
 nautobot__ldap_auth_server_ip: ''
