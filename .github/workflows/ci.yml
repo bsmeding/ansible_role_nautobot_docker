@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the codebase.
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: 'bsmeding.nautobot_docker'
 
@@ -62,7 +62,7 @@ jobs:
           docker-images: true
 
       - name: Check out the codebase.
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: 'bsmeding.nautobot_docker'
 
