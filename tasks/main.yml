@@ -13,9 +13,6 @@
     - assert: "nautobot__superuser_api_token is defined and nautobot__superuser_api_token | length <41"
       fail_msg: "nautobot__superuser_api_token must be hset and maximum of 40 characters"
 
-
-
-
 - name: Include OS-specific vars
   include_vars: "{{ ansible_os_family }}.yml"
 
@@ -386,12 +383,3 @@
         nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"
       with_items: "{{ nautobot__plugins }}"
   when: nautobot__plugins is defined and nautobot__plugins|length>0
-
-# - name: Copy uWSGI
-#   template:
-#     src: "uwsgi.ini.j2"
-#     dest: ""{{ nautobot__config_volume_path }}/conf/uwsgi.ini"
-    # owner: "{{ nautobot__container_uid }}"
-    # group: "{{ nautobot__container_gid }}"
-#     mode: 0600
-#   notify: restart nautobot
