@@ -81,6 +81,9 @@ Below are key variables for customizing the Nautobot Docker installation. These 
 - **`nautobot__image`**: Specifies the Docker image for Nautobot.
   - Default: `'nautobot:2.3'`
 
+- **`nautobot__custom_image`**: Specifies a custom Nautobot image
+  - Example: `'bsmeding/nautobot:2.3'`
+  - 
 ### Python & Ansible Configuration
 
 - **`nautobot__image_python_version`**: Python version to be used in the container.
@@ -160,6 +163,8 @@ Below are key variables for customizing the Nautobot Docker installation. These 
 ### Installing Plugins
 
 To install plugins, set the `nautobot__plugins` variable with plugin configurations. Example:
+
+**Please NOTE** that plugins are NOT INSTALLED in custom images, only when using Networktocode Docker images!!
 
 ```yaml
 nautobot__plugins:
@@ -283,6 +288,31 @@ query ($device_id: ID!) {
 If migrating from Nautobot v1 to v2, set `nautobot__pause_before_start_worker` to at least `600` seconds to allow the database to migrate before starting workers.
 
 ---
+
+## Celery workers
+To increase the workers, change the variable `nautobot__number_of_workers` to desired workers, please note these will run on the same host.
+
+
+Check if celery workers are online:
+
+Exec into nautobot containers: `docker exec -it nautobot /bin/bash`
+
+Then load settings: `export DJANGO_SETTINGS_MODULE=nautobot_config`
+Then execute: `celery -A nautobot.core.celery:app status`
+
+Example:
+```bash
+nautobot@fc53117bd332:~$ export DJANGO_SETTINGS_MODULE=nautobot_config
+
+celery -A nautobot.core.celery:app status
+
+->  node1@worker1: OK
+
+1 node online.
+
+nautobot@fc53117bd332:~$
+```
+
 
 ## Error Handling
 
