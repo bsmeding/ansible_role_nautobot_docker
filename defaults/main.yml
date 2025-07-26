@@ -121,17 +121,11 @@ nautobot__directory_volumes:
   - "{{ nautobot__home }}/media:/opt/nautobot/media"
   - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
   - "{{ nautobot__home }}/static:/opt/nautobot/static"
-<<<<<<< HEAD
 nautobot__file_volumes:
   - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
-  - "{{ nautobot__home }}/config/custom_jinja_filters/ipaddress_filters.py:/opt/nautobot/ipaddress_filters.py"
-=======
-  - "{{ nautobot__home }}/config:/opt/nautobot/config"
+  - "{{ nautobot__home }}/config/custom_jinja_filters/ipaddress_filters.py:/opt/nautobot/custom_jinja_filters/ipaddress_filters.py"
 nautobot__celerybeat_directory_volumes:
   - "{{ nautobot__home }}/celerybeat_data:/opt/nautobot/celerybeat"
-nautobot__file_volumes: []
-  # - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
->>>>>>> 31cc11e0261172df7dbf6fe362e272fb9b38d8c2
 nautobot__postgres_directory_volumes:
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
