@@ -17,15 +17,13 @@
 
     - name: Check if Nautobot login page is running
       ansible.builtin.uri:
-        url: "http://localhost:8080"
+        url: "http://host.docker.internal:8080"
         return_content: true
         status_code: 200
       register: local_webserver_output
       until: local_webserver_output.status == 200
       retries: 10
       delay: 10
-      failed_when: local_webserver_output is failed or local_webserver_output.status != 200
-
 
     - name: Debug content
       ansible.builtin.debug:
