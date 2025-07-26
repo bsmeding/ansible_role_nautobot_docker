@@ -291,7 +291,6 @@
     - name: Override image name with local Docker
       ansible.builtin.set_fact:
         nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
-  
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:
