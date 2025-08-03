@@ -22,5 +22,4 @@
       failed_when: systemctl_status.rc > 1
 
   roles:
-    - role: bsmeding.docker
     - role: bsmeding.nautobot_docker
