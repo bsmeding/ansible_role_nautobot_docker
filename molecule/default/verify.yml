@@ -11,13 +11,14 @@
 
     - name: Waits for database migrations (can take up to 5 minutes)
       ansible.builtin.wait_for:
-        host: localhost
-        port: "8080"
-        delay: 180
+        host: 127.0.0.1
+        port: 8080
+        timeout: 300
+        delay: 10
 
     - name: Check if Nautobot login page is running
       ansible.builtin.uri:
-        url: "http://host.docker.internal:8080"
+        url: "http://127.0.0.1:8080/login/"
         return_content: true
         status_code: 200
       register: local_webserver_output
