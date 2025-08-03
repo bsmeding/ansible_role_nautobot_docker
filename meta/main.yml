@@ -4,7 +4,7 @@ galaxy_info:
   author: bsmeding
   description: Role to install Nautobot CMDB in Docker container
   company: "b@rtsmeding.nl"
-  license: "license (BSD, MIT)"
+  license: MIT
   min_ansible_version: '2.10'
   platforms:
     - name: Fedora
@@ -21,7 +21,7 @@ galaxy_info:
         - focal
         - jammy
     - name: Alpine
-      version:
+      versions:
         - all
     - name: ArchLinux
       versions:
@@ -33,4 +33,6 @@ galaxy_info:
     - ipam
     - dcim
     - netdevops
-dependencies: []
+
+dependencies:
+  - bsmeding.docker
