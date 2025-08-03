@@ -1,7 +1,8 @@
 ---
-- name: Verify - Nautobot is running
+- name: Verify - Nginx is running
   hosts: all
   become: false
+  gather_facts: false
   tasks:
     - name: Include default vars
       ansible.builtin.include_vars:
@@ -9,23 +10,26 @@
         extensions:
           - "yml"
 
-    - name: Waits for database migrations (can take up to 5 minutes)
-      ansible.builtin.wait_for:
-        host: 127.0.0.1
-        port: 8080
-        timeout: 300
-        delay: 10
-
-    - name: Check if Nautobot login page is running
+    - name: Check that if default page is running
       ansible.builtin.uri:
-        url: "http://127.0.0.1:8080/login/"
+        url: "http://localhost:8080"
         return_content: true
-        status_code: 200
       register: local_webserver_output
-      until: local_webserver_output.status == 200
-      retries: 10
-      delay: 10
+      failed_when: local_webserver_output is failed or local_webserver_output.status != 200
+      # or "'Welcome to our server' not in local_webserver_output.content"
 
-    - name: Debug content
-      ansible.builtin.debug:
-        msg: "{{ local_webserver_output.content | truncate(500) }}"
+    - name: Show output
+      debug:
+        var: local_webserver_output
+
+    - name: Verify Nautobot container is running
+      community.docker.docker_container_info:
+        name: "{{ nautobot__name }}"
+      register: nautobot_container_info
+
+    - name: Check nautobot container status
+      assert:
+        that:
+          - nautobot_container_info.exists
+          - nautobot_container_info.container.State.Status == "running"
+        fail_msg: "Nautobot container is not running"

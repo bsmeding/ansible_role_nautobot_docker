@@ -10,15 +10,40 @@ driver:
   name: docker
 platforms:
   - name: instance
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible:latest"
+    image: "bsmeding/ansible_cicd_${MOLECULE_DISTRO:-ubuntu2204}:latest"
     command: ${MOLECULE_DOCKER_COMMAND:-""}
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /var/run/docker.sock:/var/run/docker.sock
     cgroupns_mode: host
     privileged: true
     pre_build_image: true
     published_ports:
-      - "8080:8080"
+      - "8080:80"
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    capabilities:
+      - SYS_ADMIN
+      - NET_ADMIN
+      - SYS_CHROOT
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - CHOWN
+      - FOWNER
+      - MKNOD
+      - NET_BIND_SERVICE
+      - SYS_BOOT
+      - SYS_RESOURCE
+      - SYS_TIME
+      - SYS_TTY_CONFIG
+      - AUDIT_WRITE
+      - MAC_OVERRIDE
+      - MAC_ADMIN
+      - SYSLOG
+      - WAKE_ALARM
+      - BLOCK_SUSPEND
+      - LEASE
 provisioner:
   name: ansible
   playbooks:

@@ -20,7 +20,7 @@ jobs:
           stale-issue-label: "stale"
           stale-pr-label: "stale"
           stale-issue-message: |
-            This issue has been marked 'stale' due to lack of recent activity. If there is no further activity, the issue will be closed in another 30 days. Thank you for your contribution!          
+            This issue has been marked 'stale' due to lack of recent activity. If there is no further activity, the issue will be closed in another 30 days. Thank you for your contribution!
           close-issue-message: |
             This issue has been closed due to inactivity. If you feel this is in error, please reopen the issue or file a new issue with the relevant details.
           stale-pr-message: |
