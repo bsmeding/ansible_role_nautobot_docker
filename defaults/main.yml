@@ -1,11 +1,11 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:2.3
-
+nautobot__image: nautobot:2.4.4
+nautobot__redis_image: redis:alpine
 # nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
-nautobot__custom_jinja_filters_path: '{{ playbook_dir }}/files/custom_jinja_filters'
-nautobot__image_python_version: '3.9'
+nautobot__custom_jinja_filters_path: 'files/custom_jinja_filters'
+nautobot__image_python_version: '3.11'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__number_of_workers: 1
 nautobot__install_ansible_collections:
@@ -33,6 +33,8 @@ nautobot__postgres_image: postgres:13 # Apple Silicon have issues with 14, no ne
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
 nautobot__postgres_data_dir: "{{ nautobot__home }}/pgdocker/{{ (nautobot__postgres_image | split(':'))[1] }}/data"
+nautobot__postgres_max_connections: 100
+nautobot__redis_hostname: "{{ nautobot__name }}-redis"
 nautobot__redis_password: nautobotredispassw
 nautobot__ldap_auth_server_ip: ''
 nautobot__ldap_auth_server_port: 389
@@ -53,19 +55,19 @@ nautobot__ldap_require_group: ''
 nautobot__ldap_is_active_group: ''
 nautobot__ldap_staff_group: ''
 nautobot__ldap_superuser_group: ''
-nautobot__ldap_mirror_groups: false # Mirror ALL LDAP groups
+nautobot__ldap_mirror_groups: false                   # Mirror ALL LDAP groups
 nautobot__ldap_find_group_perms: true
 nautobot__ldap_cache_groups: true
-nautobot__install_worker: false # Only for version before 1.1
+nautobot__install_worker: false                       # Only for version before 1.1
 nautobot__install_redis_client_tools: false
-nautobot__container_uid: 999 # Use 999 for internal ID of nautobot user in the container
-nautobot__container_gid: 998 # Use 999 for internal ID of nautobot user in the container
+nautobot__container_uid: 999                          # Use 999 for internal ID of nautobot user in the container
+nautobot__container_gid: 998                          # Use 999 for internal ID of nautobot user in the container
 nautobot__allowed_hosts: '*'
-nautobot__remove_existing_container: false # DO NOT USE WHEN RUNNING PRODUCTION
+nautobot__remove_existing_container: false            # DO NOT USE WHEN RUNNING PRODUCTION
 nautobot__banner_login: 'nautobot demo use admin, admin to login'
 nautobot__banner_bottom: 'Use for demo only'
-nautobot__pull_image: true
-nautobot__log_level: 'WARNING' # DEBUG  'INFO'    'WARNING'
+nautobot__pull_image: false
+nautobot__log_level: 'WARNING'                        # DEBUG  'INFO'    'WARNING'
 nautobot__network_mode:
 nautobot__network_name: nautobot
 # nautobot__network_cidr: 172.16.20.0/26
@@ -91,7 +93,7 @@ nautobot__directories:
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
-  - path: "{{ nautobot__home }}/config/custom_jinja_filters"
+  - path: "{{ nautobot__home }}/static"
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
@@ -107,16 +109,23 @@ nautobot__directories:
     mode: "0760"
     owner: "{{ nautobot__container_uid | default('root') }}"
     group: "{{ nautobot__container_gid | default('root') }}"
+  - path: "{{ nautobot__home }}/celerybeat_data"
+    mode: "0760"
+    owner: "{{ nautobot__container_uid | default('root') }}"
+    group: "{{ nautobot__container_gid | default('root') }}"
 nautobot__ports:
   - "{{ nautobot__port_http }}:8080"
   - "{{ nautobot__port_https }}:8443"
 nautobot__directory_volumes:
-  - "{{ nautobot__home }}/config:/opt/nautobot/"
   - "{{ nautobot__home }}/logs:/var/log/nautobot"
   - "{{ nautobot__home }}/media:/opt/nautobot/media"
   - "{{ nautobot__home }}/jobs:/opt/nautobot/jobs"
-  # - "{{ nautobot__home }}/static:/opt/nautobot/static"
-nautobot__file_volumes: []
+  - "{{ nautobot__home }}/static:/opt/nautobot/static"
+nautobot__file_volumes:
+  - "{{ nautobot__home }}/config/nautobot_config.py:/opt/nautobot/nautobot_config.py"
+  - "{{ nautobot__home }}/config/custom_jinja_filters/ipaddress_filters.py:/opt/nautobot/custom_jinja_filters/ipaddress_filters.py"
+nautobot__celerybeat_directory_volumes:
+  - "{{ nautobot__home }}/celerybeat_data:/opt/nautobot/celerybeat"
 nautobot__postgres_directory_volumes:
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
@@ -135,6 +144,7 @@ nautobot__default_env:
   NAUTOBOT_DOCKER_SKIP_INIT: "false"
   NAUTOBOT_NAPALM_USERNAME: "{{ nautobot__napalm_username }}"
   NAUTOBOT_NAPALM_PASSWORD: "{{ nautobot__napalm_password }}"
+  NAUTOBOT_ROOT: "/opt/nautobot"
   NAUTOBOT_CONFIG: "/opt/nautobot/nautobot_config.py"
   NAUTOBOT_DB_HOST: "{{ nautobot__postgres_name }}"
   NAUTOBOT_DB_NAME: nautobot
@@ -145,9 +155,10 @@ nautobot__default_env:
   NAUTOBOT_NAPALM_TIMEOUT: "5"
   NAUTOBOT_HIDE_RESTRICTED_UI: "true"
   NAUTOBOT_LOG_LEVEL: "{{ nautobot__log_level }}"
-  NAUTOBOT_REDIS_HOST: "{{ nautobot__name }}-redis"
+  NAUTOBOT_REDIS_HOST: "{{ nautobot__redis_hostname }}"
   NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
-  NAUTOBOT_CACHEOPS_REDIS: "redis://:{{ nautobot__redis_password }}@{{ nautobot__name }}-redis:6379/1"
+  NAUTOBOT_CACHEOPS_REDIS: "redis://:{{ nautobot__redis_password }}@{{ nautobot__redis_hostname }}:6379/1"
+  NAUTOBOT_CELERY_BROKER_URL: "redis://:{{ nautobot__redis_password }}@{{ nautobot__redis_hostname }}:6379/2"
   NAUTOBOT_REDIS_PORT: "6379"
   NAUTOBOT_REDIS_SSL: "{{ nautobot__redis_ssl | default('false') }}"
   NAUTOBOT_SECRET_KEY: "{{ nautobot__secret_key }}"
@@ -159,7 +170,7 @@ nautobot__redis_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
   GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
-  NAUTOBOT_REDIS_PASSWORD: "{{ nautobot__redis_password }}"
+  REDIS_PASSWORD: "{{ nautobot__redis_password }}"
 nautobot__postgres_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
   PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"

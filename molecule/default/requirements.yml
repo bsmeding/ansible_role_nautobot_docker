@@ -1,0 +1,6 @@
+---
+roles:
+  - name: bsmeding.docker
+# collections:
+#   - name: community.docker
+#   - name: community.general

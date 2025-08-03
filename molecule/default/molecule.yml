@@ -4,6 +4,8 @@ dependency:
   name: galaxy
   options:
     ignore-errors: true
+    ignore-certs: true
+    role-file: requirements.yml
 driver:
   name: docker
 platforms:
@@ -15,8 +17,13 @@ platforms:
     cgroupns_mode: host
     privileged: true
     pre_build_image: true
+    published_ports:
+      - "8080:8080"
 provisioner:
   name: ansible
   playbooks:
     converge: ${MOLECULE_PLAYBOOK:-converge.yml}
-    # verify: ${MOLECULE_PLAYBOOK_VERIFY:-verify.yml}
+    verify: ${MOLECULE_PLAYBOOK_VERIFY:-verify.yml}
+  config_options:
+    defaults:
+      roles_path: "../../../"
