@@ -23,4 +23,7 @@ provisioner:
   name: ansible
   playbooks:
     converge: ${MOLECULE_PLAYBOOK:-converge.yml}
-    # verify: ${MOLECULE_PLAYBOOK_VERIFY:-verify.yml}
+    verify: ${MOLECULE_PLAYBOOK_VERIFY:-verify.yml}
+  config_options:
+    defaults:
+      roles_path: "../../../"
