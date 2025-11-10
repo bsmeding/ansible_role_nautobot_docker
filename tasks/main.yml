@@ -1,17 +1,31 @@
 ---
-- name: Check variables
+- name: Check nautobot__name variable
   ansible.builtin.assert:
-    that: item.assert
-    fail_msg: "{{ item.fail_msg}}"
-  with_items:
-    - assert: "nautobot__name is defined and nautobot__name != ''"
-      fail_msg: "nautobot__name must be set to a identical name, this is prefix for all docker images"
-    - assert: "nautobot__image is defined and nautobot__image != ''"
-      fail_msg: "nautobot__image must be set to a nautobot image"
-    - assert: "nautobot__image_python_version is defined and nautobot__image_python_version is version('3.9', '>')"
-      fail_msg: "nautobot__image_python_version must be higher than 3.9"
-    - assert: "nautobot__superuser_api_token is defined and nautobot__superuser_api_token | length <41"
-      fail_msg: "nautobot__superuser_api_token must be hset and maximum of 40 characters"
+    that:
+      - nautobot__name is defined
+      - nautobot__name != ''
+    fail_msg: "nautobot__name must be set to a identical name, this is prefix for all docker images"
+
+- name: Check nautobot__image variable
+  ansible.builtin.assert:
+    that:
+      - nautobot__image is defined
+      - nautobot__image != ''
+    fail_msg: "nautobot__image must be set to a nautobot image"
+
+- name: Check nautobot__image_python_version variable
+  ansible.builtin.assert:
+    that:
+      - nautobot__image_python_version is defined
+      - nautobot__image_python_version is version('3.9', '>')
+    fail_msg: "nautobot__image_python_version must be higher than 3.9"
+
+- name: Check nautobot__superuser_api_token variable
+  ansible.builtin.assert:
+    that:
+      - nautobot__superuser_api_token is defined
+      - nautobot__superuser_api_token | length <41
+    fail_msg: "nautobot__superuser_api_token must be hset and maximum of 40 characters"
 
 - name: Include OS-specific vars
   include_vars: "{{ ansible_os_family }}.yml"
@@ -23,17 +37,6 @@
   with_items: "{{ os_packages }}"
   become: true
   when: os_packages is defined
-
-- name: Install  pip packages
-  ansible.builtin.pip:
-    name: "{{ item }}"
-    state: forcereinstall
-    executable: pip3
-    extra_args: "--user --upgrade {{ nautobot__pip_install_extra_args }}"
-    umask: "0022"
-  changed_when: false
-  with_items: "{{ python_packages }}"
-  when: python_packages is defined
 
 - name: Remove existing {{ nautobot__name }} containers
   block:
@@ -148,7 +151,7 @@
   docker_container:
     name: "{{ nautobot__postgres_name }}"
     image: "{{ nautobot__postgres_image }}"
-    pull: "{{ nautobot__pull_image }}"
+    pull: "{{ 'missing' if nautobot__pull_image else 'never' }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -158,6 +161,38 @@
     log_options: "{{ nautobot__log_options }}"
     command: ["postgres", "-c", "max_connections={{ nautobot__postgres_max_connections }}"]
   when: nautobot__install_own_postgres_db
+
+- name: Wait for PostgreSQL to be ready
+  community.docker.docker_container_exec:
+    container: "{{ nautobot__postgres_name }}"
+    command: "pg_isready -U {{ nautobot__postgres_user }}"
+  register: postgres_ready
+  until: postgres_ready.rc == 0
+  retries: 30
+  delay: 2
+  when: nautobot__install_own_postgres_db
+  ignore_errors: false
+
+- name: Ensure nautobot database exists
+  community.docker.docker_container_exec:
+    container: "{{ nautobot__postgres_name }}"
+    command: "psql -U {{ nautobot__postgres_user }} -d postgres -c 'CREATE DATABASE nautobot;'"
+  register: create_db
+  when: nautobot__install_own_postgres_db
+  ignore_errors: true
+  changed_when: create_db.rc == 0
+  failed_when: false
+
+- name: Wait for nautobot database to be accessible
+  community.docker.docker_container_exec:
+    container: "{{ nautobot__postgres_name }}"
+    command: "psql -U {{ nautobot__postgres_user }} -d nautobot -c 'SELECT 1;'"
+  register: db_accessible
+  until: db_accessible.rc == 0
+  retries: 15
+  delay: 2
+  when: nautobot__install_own_postgres_db
+  ignore_errors: false
 
 - name: Create a volume
   community.docker.docker_volume:
@@ -171,7 +206,7 @@
     state: present
     reload: yes
 
-- name: Run nautobot Redis
+- name: Run nautobot Redis (with network_mode)
   community.docker.docker_container:
     name: "{{ nautobot__name }}-redis"
     image: "{{ nautobot__redis_image }}"
@@ -179,6 +214,22 @@
     # user: "{{ docker_uid | default(1000) }}:{{ docker_gid | default(1000) }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
+    env: "{{ nautobot__redis_env }}"
+    volumes: "nautobot_redis:/data"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}"
+  when: 
+    - nautobot__network_mode is defined
+    - nautobot__network_mode | default('') | string | length > 0
+
+- name: Run nautobot Redis (with networks)
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}-redis"
+    image: "{{ nautobot__redis_image }}"
+    pull: "{{ nautobot__pull_image }}"
+    # user: "{{ docker_uid | default(1000) }}:{{ docker_gid | default(1000) }}"
+    restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
     env: "{{ nautobot__redis_env }}"
@@ -186,6 +237,8 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}"
+  when: 
+    - nautobot__network_mode is not defined or (nautobot__network_mode | default('') | string | length == 0)
 
 - name: Install Redis client tools
   ansible.builtin.package:
@@ -197,7 +250,7 @@
   block:
     - name: Create Plugins list
       set_fact:
-        nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+        nautobot__plugins_list: "{{ nautobot__plugins | map(attribute='plugin_name') | map('replace', '-', '_') | list }}"
 
     - name: Construct plugin config
       set_fact:
@@ -232,13 +285,17 @@
     group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
     mode: "0760"
 
+- name: Reset custom image flag
+  ansible.builtin.set_fact:
+    nautobot__use_custom_image: false
+
 - name: Plugins found - build custom image (only when networktocode image is used)
   when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image == '')
   block:
-    - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
+    - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }} exists"
       community.docker.docker_image_info:
         name:
-          - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+          - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }}"
       register: result_local_image
 
     - name: Copy Dockerfile with plugins
@@ -253,7 +310,7 @@
     - name: Build Nautobot with custom plugins
       community.docker.docker_image:
         name: "{{ nautobot__name }}-custom"
-        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }}"
         build:
           path: "{{ nautobot__home }}"
           nocache: true
@@ -264,19 +321,20 @@
         source: build
         force_source: yes
       register: docker_build
-      ignore_errors: true
       when: dockerfile.changed or result_local_image.images | length <1
 
     - name: Restart Docker if build failed
       ansible.builtin.service:
         name: docker
         state: restarted
-      when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
+      when: 
+        - docker_build is defined
+        - docker_build.failed | default(false) | bool
 
     - name: Build Nautobot with custom plugins (second attempt)
       community.docker.docker_image:
         name: "{{ nautobot__name }}-custom"
-        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }}"
         build:
           path: "{{ nautobot__home }}"
           nocache: true
@@ -286,28 +344,83 @@
             https_proxy: "{{ https_proxy | default('') }}"
         source: build
         force_source: yes
-      when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
+      when: 
+        - docker_build is defined
+        - docker_build.failed | default(false) | bool
+
+    - name: Verify custom image was built successfully
+      community.docker.docker_image_info:
+        name: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }}"
+      register: verify_custom_image
+      changed_when: false
 
     - name: Override image name with local Docker
       ansible.builtin.set_fact:
-        nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }}"
+        nautobot__use_custom_image: true
+      when: 
+        - verify_custom_image.images is defined
+        - verify_custom_image.images | length > 0
+      failed_when: verify_custom_image.images | length == 0
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:
-    nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.11') }}"
-  when: nautobot__custom_image is undefined or nautobot__custom_image == ''
+    nautobot__image: "networktocode/{{ nautobot__image }}{% if not '-py' in nautobot__image %} -py{{ nautobot__image_python_version | default('3.13') }}{% endif %}"
+  when: 
+    - (nautobot__custom_image is undefined or nautobot__custom_image == '')
+    - not (nautobot__plugins is defined and nautobot__plugins | length > 0)
 
-- name: Set Docker Hub image for custom image
+
+- name: Check if nautobot__network_name is already in nautobot__networks
   ansible.builtin.set_fact:
-    nautobot__image: "{{ nautobot__custom_image }}"
-  when: nautobot__custom_image is defined and nautobot__custom_image != ''
+    network_name_in_list: "{{ nautobot__networks | default([]) | selectattr('name', 'equalto', nautobot__network_name) | list | length > 0 }}"
+  when: nautobot__networks is defined
 
-- name: Run nautobot container frontend
+- name: Add nautobot__network_name to nautobot__networks if not present
+  ansible.builtin.set_fact:
+    nautobot__networks: "{{ nautobot__networks | default([]) + [{'name': nautobot__network_name}] }}"
+  when: 
+    - nautobot__networks is defined
+    - not (network_name_in_list | default(false) | bool)
+
+- name: Initialize nautobot__networks with nautobot__network_name if not defined
+  ansible.builtin.set_fact:
+    nautobot__networks:
+      - name: "{{ nautobot__network_name }}"
+  when: nautobot__networks is not defined
+
+- name: Run nautobot container frontend (with network_mode)
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
     image: "{{ nautobot__image }}"
+    pull: "{{ 'missing' if nautobot__use_custom_image | default(false) | bool else ('missing' if nautobot__pull_image else 'never') }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
+    ports: "{{ nautobot__ports }}"
+    user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
+    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
+    log_driver: "{{ nautobot__log_driver }}"
+    log_options: "{{ nautobot__log_options }}"
+    healthcheck:
+      interval: "10s"
+      timeout: "10s"
+      start_period: "120s"
+      retries: 5
+      test: ["CMD", "nautobot-server", "health_check"]
+    state: started
+    recreate: "{{ nautobot__recreate_container | bool }}"
+  when: 
+    - nautobot__network_mode is defined
+    - nautobot__network_mode is not none
+    - nautobot__network_mode | string | length > 0
+
+- name: Run nautobot container frontend (with networks)
+  community.docker.docker_container:
+    name: "{{ nautobot__name }}"
+    image: "{{ nautobot__image }}"
+    pull: "{{ 'missing' if nautobot__use_custom_image | default(false) | bool else ('missing' if nautobot__pull_image else 'never') }}"
+    restart_policy: always
     networks: "{{ nautobot__networks }}"
     ports: "{{ nautobot__ports }}"
     user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
@@ -316,11 +429,26 @@
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options }}"
     healthcheck:
-      interval: "5s"
-      timeout: "5s"
-      start_period: "5s"
-      retries: 3
+      interval: "10s"
+      timeout: "10s"
+      start_period: "120s"
+      retries: 5
       test: ["CMD", "nautobot-server", "health_check"]
+    state: started
+    recreate: "{{ nautobot__recreate_container | bool }}"
+  when: 
+    - nautobot__network_mode is not defined or nautobot__network_mode is none or (nautobot__network_mode | default('') | string | length == 0)
+
+- name: Ensure static files are collected
+  community.docker.docker_container_exec:
+    container: "{{ nautobot__name }}"
+    command: "nautobot-server collectstatic --no-input"
+  register: collectstatic_result
+  until: collectstatic_result.rc == 0
+  retries: 3
+  delay: 10
+  ignore_errors: true
+  changed_when: false
 
 - name: Pause for starting worker (for example when migrations are needed)
   pause:
@@ -387,6 +515,12 @@
     log_options: "{{ nautobot__log_options }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__celerybeat_directory_volumes + nautobot__file_volumes }}"
     command: "nautobot-server celery beat -l {{ nautobot__log_level }}"
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep '[c]elery beat' || exit 1"]
+      interval: "30s"
+      timeout: "10s"
+      retries: 3
+      start_period: "60s"
     #  command_handling: "compatibility"
     # tty: true
 
@@ -394,7 +528,7 @@
   block:
     - name: Create Plugins list
       set_fact:
-        nautobot__plugins_list: "{{ nautobot__plugins | community.general.json_query('[*].plugin_name') | replace('-','_') }}"
+        nautobot__plugins_list: "{{ nautobot__plugins | map(attribute='plugin_name') | map('replace', '-', '_') | list }}"
     - name: Construct plugin config
       set_fact:
         nautobot__plugin_config: "{{ (nautobot__plugin_config | default({}))  |combine(item.plugin_config|default({})) }}"

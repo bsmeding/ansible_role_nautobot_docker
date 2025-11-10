@@ -2,28 +2,8 @@
 - name: restart nautobot
   docker_container:
     name: "{{ nautobot__name }}"
-    restart: true
+    state: started
+  ignore_errors: true
+
 - name: restart nautobot-stack
-  docker_container:
-    name: "{{ nautobot__name }}"
-    restart: true
-- name: restart nautobot-stack
-  docker_container:
-    name: "{{ nautobot__name }}-worker"
-    restart: true
-- name: restart nautobot-stack
-  docker_container:
-    name: "{{ nautobot__name }}-celery-worker"
-    restart: true
-- name: restart nautobot-stack
-  docker_container:
-    name: "{{ nautobot__name }}-celery-beat"
-    restart: true
-- name: restart nautobot-stack
-  docker_container:
-    name: "{{ nautobot__name }}-redis"
-    restart: true
-- name: restart nautobot-stack
-  docker_container:
-    name: "{{ nautobot__name }}-db"
-    restart: true
+  include_tasks: restart_stack.yml

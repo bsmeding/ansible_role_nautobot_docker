@@ -1,9 +1,13 @@
-ARG PYTHON_VER={{ nautobot__image_python_version | default('3.9') }}
+ARG PYTHON_VER={{ nautobot__image_python_version | default('3.12') }}
 ARG NAUTOBOT_IMAGE={{ nautobot__image }}
 # ---------------------------------
 # Stage: PreRequistics
 # ---------------------------------
+{% if '-py' in nautobot__image %}
+FROM networktocode/${NAUTOBOT_IMAGE} as base
+{% else %}
 FROM networktocode/${NAUTOBOT_IMAGE}-py${PYTHON_VER} as base
+{% endif %}
 USER 0
 
 {% if http_proxy is defined and http_proxy != '' %}
@@ -36,7 +40,7 @@ RUN apt-get install -y gcc && \
 
 RUN pip3 install --upgrade pip wheel {{ nautobot__pip_install_extra_args }}
 RUN pip3 install --upgrade setuptools {{ nautobot__pip_install_extra_args }}
-RUN pip3 install --upgrade nautobot[ldap]=={{ (nautobot__image | split(':'))[1] }} {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --upgrade nautobot[ldap]=={{ (nautobot__image | split(':'))[1] | default('latest') | regex_replace('-py[0-9.]+$', '') }} {{ nautobot__pip_install_extra_args }}
 RUN pip3 install --upgrade ansible-core=={{ nautobot_install_ansible_version | default('2.15.10') }}  {{ nautobot__pip_install_extra_args }}
 
 # Check extra pip packages to install
@@ -59,7 +63,7 @@ RUN ansible-galaxy collection install {{ ansible_collection }}{% if nautobot__an
 {% if nautobot__plugins is defined %}
 RUN pip3 install --upgrade nornir-nautobot {{ nautobot__pip_install_extra_args }}
 {% for plugin in nautobot__plugins %}
-RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% if plugin.plugin_version %}=={{ plugin.plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
+RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% set plugin_version = plugin['plugin_version'] | default('') %}{% if plugin_version %}=={{ plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
 
 {% endfor %}
 {% endif %}

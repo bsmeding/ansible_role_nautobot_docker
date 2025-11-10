@@ -1,0 +1,56 @@
+---
+- name: Check if nautobot container exists
+  command: docker ps -a --filter "name={{ nautobot__name }}$" --format "{{ '{{' }}.Names{{ '}}' }}"
+  register: nautobot_container_check
+  ignore_errors: true
+  changed_when: false
+  failed_when: false
+
+- name: Restart nautobot container
+  docker_container:
+    name: "{{ nautobot__name }}"
+    state: started
+  when: nautobot_container_check.stdout == nautobot__name
+  ignore_errors: true
+
+- name: Restart nautobot worker containers
+  docker_container:
+    name: "{{ nautobot__name }}-worker-{{ item }}"
+    state: started
+  loop: "{{ range(1, (nautobot__number_of_workers | default(1)) + 1) | list }}"
+  when: 
+    - nautobot__install_worker | default(false) | bool
+    - nautobot_container_check.stdout == nautobot__name
+  ignore_errors: true
+
+- name: Restart celery worker containers
+  docker_container:
+    name: "{{ nautobot__name }}-celery-worker-{{ item }}"
+    state: started
+  loop: "{{ range(1, (nautobot__number_of_workers | default(1)) + 1) | list }}"
+  when: nautobot_container_check.stdout == nautobot__name
+  ignore_errors: true
+
+- name: Restart celery beat container
+  docker_container:
+    name: "{{ nautobot__name }}-celery-beat"
+    state: started
+  when: nautobot_container_check.stdout == nautobot__name
+  ignore_errors: true
+
+- name: Restart redis container
+  docker_container:
+    name: "{{ nautobot__name }}-redis"
+    state: started
+  when: nautobot_container_check.stdout == nautobot__name
+  ignore_errors: true
+
+- name: Restart database container
+  docker_container:
+    name: "{{ nautobot__postgres_name }}"
+    state: started
+  when: 
+    - nautobot__install_own_postgres_db | default(false) | bool
+    - nautobot_container_check.stdout == nautobot__name
+  ignore_errors: true
+

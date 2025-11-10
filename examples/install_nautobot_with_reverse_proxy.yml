@@ -1,0 +1,51 @@
+---
+- name: Install Nautobot
+  hosts: cmdb
+  become: true
+  gather_facts: true
+
+  vars:
+    nginx__network: 'proxy'                 # network to use for nginx reverse proxy, so we can access the container from the reverse proxy url
+    nginx__container_networks:
+      - name: bridge
+      - name: "{{ nginx__network }}"
+    nginx__proxy_confs_subdomain:
+    - server_name: cmdb.mydomain.tld
+      listen: 80
+      # listen_https: 443           # need to enable https, if so also add certificate and key files to nginx__local_certs_path
+      default_upstream_proto: http
+      default_upstream_url: nautobot
+      default_upstream_port: 8080
+    nautobot__network_name: nautobot
+    nautobot__networks:
+      - name: bridge                        # default network, so we can access the container on his own port (default 8080)
+      - name: "{{ nginx__network }}"        # network to use for nginx reverse proxy, so we can access the container from the reverse proxy url
+      - name: "{{ nautobot__network_name }}" # network to use for nautobot container backends
+    nautobot__recreate_container: true      # When true: force recreate, when false: omit parameter (module defaults to 'smart')  
+    nautobot__url: 'cmdb.mydomain.tld'      # Because we use nginx with url we need to set the url here
+    nautobot__superuser_name: admin
+    nautobot__superuser_password: admin
+    nautobot__superuser_api_token: "1234567890abcd098765321"
+    nautobot__secret_key: "1234567890abcdefghijklmnopqrstuvwxyz"   #this can only be changed on first installation, after that it will be generated automatically
+    nautobot__napalm_username: admin
+    nautobot__napalm_password: admin
+    nautobot__napalm_args: {}
+    nautobot__postgres_password: nautobotdbpassword # this can only be changed on first installation, after that it will be generated automatically
+    nautobot__redis_password: nautobotredispassw # this can only be changed on first installation, after that it will be generated automatically
+    nautobot__sent_installation_metrics: false
+    nautobot__number_of_workers: 2            # number of workers to use for the nautobot container, default is 1
+    nautobot__remove_existing_home_dir: false  # When true: This will delete the database and config, use for testing only
+
+  tasks:
+    - name: Install Docker
+      ansible.builtin.include_role:
+        name: bsmeding.docker
+
+    - name: Check if Nginx is installed
+      include_role:
+        name: 'bsmeding.nginx_docker'
+
+    - name: Check if Nautobot is installed
+      include_role:
+        name: bsmeding.nautobot_docker
+

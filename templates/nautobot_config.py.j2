@@ -245,7 +245,16 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 # If running Nautobot under a single domain, you may not need to set this variable;
 # if running on multiple domains, you *may* need to set this variable to more or less the same as ALLOWED_HOSTS above.
 # https://docs.djangoproject.com/en/stable/ref/settings/#csrf-trusted-origins
-CSRF_TRUSTED_ORIGINS = {{ nautobot__csrf_trusted_origins | default('[]')}}
+{% set csrf_origins = nautobot__csrf_trusted_origins | default([]) %}
+{% set csrf_origins_with_scheme = [] %}
+{% for origin in csrf_origins %}
+{% if origin is string and '://' not in origin %}
+{% set _ = csrf_origins_with_scheme.append('https://' + origin) %}
+{% else %}
+{% set _ = csrf_origins_with_scheme.append(origin) %}
+{% endif %}
+{% endfor %}
+CSRF_TRUSTED_ORIGINS = {{ csrf_origins_with_scheme | to_nice_json }}
 
 # Set to True to enable server debugging. WARNING: Debugging introduces a substantial performance penalty and may reveal
 # sensitive information about your installation. Only enable debugging while performing testing. Never enable debugging

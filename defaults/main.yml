@@ -1,11 +1,11 @@
 ---
 container_time_zone: 'Europe/Amsterdam'
 nautobot__name: nautobot
-nautobot__image: nautobot:2.4.4
+nautobot__image: nautobot:2.4.21-py3.12
 nautobot__redis_image: redis:alpine
-# nautobot__custom_image: 'bsmeding/nautobot:2.2' # Use when not default networktocode image is used
+# nautobot__custom_image: 'bsmeding/nautobot:2.2'     # Use when not default networktocode image is used
+nautobot__image_python_version: '3.12'                # Used when building from source in Dockerfile.j2 or Dockerfile_v1.j2, example when custom pip packages are set
 nautobot__custom_jinja_filters_path: 'files/custom_jinja_filters'
-nautobot__image_python_version: '3.11'
 nautobot__install_ansible_version: '8.2.0'
 nautobot__number_of_workers: 1
 nautobot__install_ansible_collections:
@@ -18,8 +18,10 @@ nautobot__port_https: 8444
 nautobot__pause_before_start_worker: 0
 nautobot__url: "http://localhost:{{ nautobot__port_http }}" # Please adjust for your environment
 nautobot__csrf_trusted_origins:
-  - "{{ nautobot__url }}"
+  - "http://{{ nautobot__url }}"
+  - "https://{{ nautobot__url }}"
 nautobot__home: "/opt/{{ nautobot__name }}"
+nautobot__sent_installation_metrics: true
 nautobot__superuser_name: admin
 nautobot__superuser_password: admin
 nautobot__superuser_api_token: "1234567890abcdefghijklmnopqrstuvwxyz" # Max 40 char
@@ -64,6 +66,7 @@ nautobot__container_uid: 999                          # Use 999 for internal ID 
 nautobot__container_gid: 998                          # Use 999 for internal ID of nautobot user in the container
 nautobot__allowed_hosts: '*'
 nautobot__remove_existing_container: false            # DO NOT USE WHEN RUNNING PRODUCTION
+nautobot__recreate_container: false                   # Set to true to force container recreation (useful for network changes)
 nautobot__banner_login: 'nautobot demo use admin, admin to login'
 nautobot__banner_bottom: 'Use for demo only'
 nautobot__pull_image: false
@@ -72,13 +75,14 @@ nautobot__network_mode:
 nautobot__network_name: nautobot
 # nautobot__network_cidr: 172.16.20.0/26
 nautobot__networks:
+  - name: bridge
   - name: "{{ nautobot__network_name }}"
 nautobot__purge_networks: false
 nautobot__env: {}
 nautobot__log_driver: json-file
 nautobot__log_options:
-  max-size: 10M
-  max-file: 5
+  max-size: "10M"
+  max-file: "5"
 nautobot__remove_existing_home_dir: false
 nautobot__directories:
   - path: "{{ nautobot__home }}"
@@ -130,8 +134,8 @@ nautobot__postgres_directory_volumes:
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
-  PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
-  GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+  PUID: "{{ (nautobot__container_uid | default(docker_uid) | default(1040)) | string }}"
+  GUID: "{{ (nautobot__container_gid | default(docker_gid) | default(1001)) | string }}"
   NAUTOBOT_CREATE_SUPERUSER: "true"
   NAUTOBOT_SUPERUSER_NAME: "{{ nautobot__superuser_name | default('admin') }}"
   NAUTOBOT_SUPERUSER_EMAIL: "admin@admin.org"
@@ -140,6 +144,7 @@ nautobot__default_env:
   NAUTOBOT_BANNER_LOGIN: "{{ nautobot__banner_login }}"
   NAUTOBOT_BANNER_BOTTOM: "{{ nautobot__banner_bottom }}"
   NAUTOBOT_ALLOWED_HOSTS: "{{ nautobot__allowed_hosts }}"
+  NAUTOBOT_INSTALLATION_METRICS_ENABLED: "{{ (nautobot__sent_installation_metrics | default(true)) | string | lower }}"  
   NAUTOBOT_CHANGELOG_RETENTION: "0"
   NAUTOBOT_DOCKER_SKIP_INIT: "false"
   NAUTOBOT_NAPALM_USERNAME: "{{ nautobot__napalm_username }}"
@@ -167,13 +172,13 @@ nautobot__default_env:
   NAUTOBOT_AUTH_LDAP_BIND_PASSWORD: "{{ nautobot__ldap_auth_bind_pass }}"
 nautobot__redis_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
-  PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
-  GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+  PUID: "{{ (nautobot__container_uid | default(docker_uid) | default(1040)) | string }}"
+  GUID: "{{ (nautobot__container_gid | default(docker_gid) | default(1001)) | string }}"
   REDIS_PASSWORD: "{{ nautobot__redis_password }}"
 nautobot__postgres_env:
   TZ: "{{ container_time_zone | default('Europe/Paris') }}"
-  PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
-  GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+  PUID: "{{ (nautobot__container_uid | default(docker_uid) | default(1040)) | string }}"
+  GUID: "{{ (nautobot__container_gid | default(docker_gid) | default(1001)) | string }}"
   POSTGRES_DB: "nautobot"
   POSTGRES_PASSWORD: "{{ nautobot__postgres_password }}"
   POSTGRES_USER: "{{ nautobot__postgres_user }}"
