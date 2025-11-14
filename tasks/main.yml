@@ -144,6 +144,27 @@
   changed_when: false   # Molecule test only does not idempodence this folder
 
 # Create PostgreSQL  DB
+- name: Ensure Docker is ready before starting DB container
+  ansible.builtin.command: docker info
+  register: docker_info_check
+  until: docker_info_check.rc == 0
+  retries: 10
+  delay: 2
+  changed_when: false
+  when: nautobot__install_own_postgres_db
+
+- name: Remove existing DB container if in bad state
+  docker_container:
+    name: "{{ nautobot__postgres_name }}"
+    state: absent
+  ignore_errors: true
+  when: nautobot__install_own_postgres_db
+
+- name: Pause to allow Docker to stabilize
+  ansible.builtin.pause:
+    seconds: 2
+  when: nautobot__install_own_postgres_db
+
 - name: Run DB container
   docker_container:
     name: "{{ nautobot__postgres_name }}"
@@ -155,8 +176,52 @@
     env: "{{ nautobot__postgres_env | combine(nautobot__postgres_user_env) }}"
     volumes: "{{ nautobot__postgres_directory_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
-    log_options: "{{ nautobot__log_options }}"
+    log_options: "{{ nautobot__log_options | default(omit) }}"
     command: ["postgres", "-c", "max_connections={{ nautobot__postgres_max_connections }}"]
+  register: postgres_container_task
+  when: nautobot__install_own_postgres_db
+
+- name: Check if DB container task failed with shim error
+  ansible.builtin.set_fact:
+    postgres_shim_error: "{{ postgres_container_task.failed | default(false) | bool and ('shim version' in (postgres_container_task.msg | default('') | string)) }}"
+  when:
+    - nautobot__install_own_postgres_db
+    - postgres_container_task is defined
+
+- name: Fallback - Start DB container using docker run
+  ansible.builtin.shell: |
+    docker run -d \
+      --name "{{ nautobot__postgres_name }}" \
+      --restart always \
+      --network "{{ nautobot__network_name }}" \
+      {% for env_item in nautobot__postgres_env | combine(nautobot__postgres_user_env) | dict2items %}
+      -e {{ env_item.key }}="{{ env_item.value }}" \
+      {% endfor %}
+      {% for volume in nautobot__postgres_directory_volumes %}
+      -v {{ volume }} \
+      {% endfor %}
+      --log-driver "{{ nautobot__log_driver }}" \
+      {% if nautobot__log_options is defined and nautobot__log_options | length > 0 %}
+      {% for key, value in nautobot__log_options.items() %}
+      --log-opt {{ key }}="{{ value }}" \
+      {% endfor %}
+      {% endif %}
+      "{{ nautobot__postgres_image }}" \
+      postgres -c max_connections={{ nautobot__postgres_max_connections }}
+  register: postgres_docker_run
+  changed_when: postgres_docker_run.rc == 0
+  failed_when: postgres_docker_run.rc != 0 and ('already exists' not in (postgres_docker_run.stderr | default('')))
+  when:
+    - nautobot__install_own_postgres_db
+    - postgres_shim_error | default(false) | bool
+
+- name: Verify DB container is running
+  community.docker.docker_container_info:
+    name: "{{ nautobot__postgres_name }}"
+  register: postgres_container_info
+  until: postgres_container_info.exists | default(false) and postgres_container_info.container.State.Status | default('') == 'running'
+  retries: 10
+  delay: 3
   when: nautobot__install_own_postgres_db
 
 - name: Create a volume
@@ -184,7 +249,7 @@
     env: "{{ nautobot__redis_env }}"
     volumes: "nautobot_redis:/data"
     log_driver: "{{ nautobot__log_driver }}"
-    log_options: "{{ nautobot__log_options }}"
+    log_options: "{{ nautobot__log_options | default(omit) }}"
     command: "redis-server --appendonly yes --requirepass {{ nautobot__redis_password }}"
 
 - name: Install Redis client tools
@@ -314,7 +379,7 @@
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
-    log_options: "{{ nautobot__log_options }}"
+    log_options: "{{ nautobot__log_options | default(omit) }}"
     healthcheck:
       interval: "5s"
       timeout: "5s"
@@ -340,7 +405,7 @@
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
-    log_options: "{{ nautobot__log_options }}"
+    log_options: "{{ nautobot__log_options | default(omit) }}"
     healthcheck:
       interval: "5s"
       timeout: "5s"
@@ -361,7 +426,7 @@
     # user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
-    log_options: "{{ nautobot__log_options }}"
+    log_options: "{{ nautobot__log_options | default(omit) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
     command: "nautobot-server celery worker -n worker{{ item }} -l {{ nautobot__log_level }}"
     # command_handling: "compatibility"
@@ -384,7 +449,7 @@
     # user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
     env: "{{ nautobot__default_env | combine(nautobot__env) }}"
     log_driver: "{{ nautobot__log_driver }}"
-    log_options: "{{ nautobot__log_options }}"
+    log_options: "{{ nautobot__log_options | default(omit) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__celerybeat_directory_volumes + nautobot__file_volumes }}"
     command: "nautobot-server celery beat -l {{ nautobot__log_level }}"
     #  command_handling: "compatibility"

@@ -77,8 +77,8 @@ nautobot__purge_networks: false
 nautobot__env: {}
 nautobot__log_driver: json-file
 nautobot__log_options:
-  max-size: 10M
-  max-file: 5
+  max-size: "10M"
+  max-file: "5"
 nautobot__remove_existing_home_dir: false
 nautobot__directories:
   - path: "{{ nautobot__home }}"
