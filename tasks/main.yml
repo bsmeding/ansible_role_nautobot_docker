@@ -179,6 +179,7 @@
     log_options: "{{ nautobot__log_options | default(omit) }}"
     command: ["postgres", "-c", "max_connections={{ nautobot__postgres_max_connections }}"]
   register: postgres_container_task
+  ignore_errors: true
   when: nautobot__install_own_postgres_db
 
 - name: Check if DB container task failed with shim error

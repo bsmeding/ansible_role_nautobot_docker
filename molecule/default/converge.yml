@@ -1,7 +1,8 @@
 ---
-- name: Converge Nginx Docker
+- name: Converge Nautobot Docker
   hosts: all
   become: true
+  gather_facts: true
   vars:
     nautobot__port_http: 8080
     nautobot__port_https: 8443
@@ -9,8 +10,6 @@
     nautobot__network_cidr: '172.16.23.0/24'
     nautobot__remove_existing_container: false
     nautobot__remove_existing_home_dir: false
-    # Skip Docker service management in test environment
-    docker_service_manage: false
   pre_tasks:
     - name: Update apt cache
       ansible.builtin.apt:
@@ -18,30 +17,15 @@
         cache_valid_time: 600
       when: ansible_os_family == 'Debian'
 
-    - name: Wait for systemd to complete initialization
-      ansible.builtin.command: systemctl is-system-running
-      register: systemctl_status
-      until: >
-        'running' in systemctl_status.stdout or
-        'degraded' in systemctl_status.stdout
-      retries: 30
-      delay: 5
-      when: ansible_service_mgr == 'systemd'
-      changed_when: false
-      failed_when: systemctl_status.rc > 1
-
     - name: Check if Docker socket exists
-      stat:
+      ansible.builtin.stat:
         path: /var/run/docker.sock
       register: docker_socket
 
-    - name: Ensure Docker socket permissions are correct
-      file:
-        path: /var/run/docker.sock
-        mode: '0666'
-      when: docker_socket.stat.exists and docker_socket.stat.exists
+    - name: Fail if Docker socket is unavailable
+      ansible.builtin.fail:
+        msg: "Docker socket not available inside Molecule instance."
+      when: not docker_socket.stat.exists
 
   roles:
-    - role: bsmeding.docker
-      when: docker_socket.stat.exists and docker_socket.stat.exists
     - role: bsmeding.nautobot_docker

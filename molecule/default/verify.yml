@@ -1,35 +1,29 @@
 ---
-- name: Verify - Nginx is running
+- name: Verify Nautobot Docker role
   hosts: all
-  become: false
+  become: true
   gather_facts: false
+  vars_files:
+    - ../../defaults/main.yml
   tasks:
-    - name: Include default vars
-      ansible.builtin.include_vars:
-        dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/"
-        extensions:
-          - "yml"
-
-    - name: Check that if default page is running
-      ansible.builtin.uri:
-        url: "http://localhost:8080"
-        return_content: true
-      register: local_webserver_output
-      failed_when: local_webserver_output is failed or local_webserver_output.status != 200
-      # or "'Welcome to our server' not in local_webserver_output.content"
-
-    - name: Show output
-      debug:
-        var: local_webserver_output
-
     - name: Verify Nautobot container is running
       community.docker.docker_container_info:
         name: "{{ nautobot__name }}"
       register: nautobot_container_info
 
-    - name: Check nautobot container status
-      assert:
+    - name: Assert Nautobot container status
+      ansible.builtin.assert:
         that:
           - nautobot_container_info.exists
-          - nautobot_container_info.container.State.Status == "running"
+          - nautobot_container_info.container.State.Running | default(false)
         fail_msg: "Nautobot container is not running"
+
+    - name: Check HTTP endpoint responds
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nautobot__port_http }}"
+        status_code: 200
+      register: nautobot_http
+      retries: 5
+      delay: 2
+      until: nautobot_http.status == 200
+      changed_when: false
