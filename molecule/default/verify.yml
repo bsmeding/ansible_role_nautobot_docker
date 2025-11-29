@@ -6,6 +6,14 @@
   vars_files:
     - ../../defaults/main.yml
   tasks:
+    - name: Wait for Nautobot HTTP port
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ nautobot__port_http }}"
+        delay: 10
+        timeout: 300
+      changed_when: false
+
     - name: Verify Nautobot container is running
       community.docker.docker_container_info:
         name: "{{ nautobot__name }}"
@@ -23,7 +31,7 @@
         url: "http://localhost:{{ nautobot__port_http }}"
         status_code: 200
       register: nautobot_http
-      retries: 5
-      delay: 2
+      retries: 36
+      delay: 5
       until: nautobot_http.status == 200
       changed_when: false

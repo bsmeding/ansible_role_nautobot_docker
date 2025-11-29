@@ -1,17 +1,12 @@
 ---
 - name: Check variables
   ansible.builtin.assert:
-    that: item.assert
-    fail_msg: "{{ item.fail_msg}}"
-  with_items:
-    - assert: "nautobot__name is defined and nautobot__name != ''"
-      fail_msg: "nautobot__name must be set to a identical name, this is prefix for all docker images"
-    - assert: "nautobot__image is defined and nautobot__image != ''"
-      fail_msg: "nautobot__image must be set to a nautobot image"
-    - assert: "nautobot__image_python_version is defined and nautobot__image_python_version is version('3.9', '>')"
-      fail_msg: "nautobot__image_python_version must be higher than 3.9"
-    - assert: "nautobot__superuser_api_token is defined and nautobot__superuser_api_token | length <41"
-      fail_msg: "nautobot__superuser_api_token must be hset and maximum of 40 characters"
+    that:
+      - nautobot__name is defined and nautobot__name != ''
+      - nautobot__image is defined and nautobot__image != ''
+      - nautobot__image_python_version is defined and (nautobot__image_python_version is version('3.9', '>'))
+      - nautobot__superuser_api_token is defined and (nautobot__superuser_api_token | length < 41)
+    fail_msg: "Required Nautobot variables are missing or invalid."
 
 - name: Include OS-specific vars
   include_vars: "{{ ansible_os_family }}.yml"
@@ -159,6 +154,7 @@
     state: absent
   ignore_errors: true
   when: nautobot__install_own_postgres_db
+  changed_when: false
 
 - name: Pause to allow Docker to stabilize
   ansible.builtin.pause:
@@ -179,8 +175,9 @@
     log_options: "{{ nautobot__log_options | default(omit) }}"
     command: ["postgres", "-c", "max_connections={{ nautobot__postgres_max_connections }}"]
   register: postgres_container_task
-  ignore_errors: true
+  failed_when: false
   when: nautobot__install_own_postgres_db
+  changed_when: false
 
 - name: Check if DB container task failed with shim error
   ansible.builtin.set_fact:

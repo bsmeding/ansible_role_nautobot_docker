@@ -129,9 +129,9 @@ nautobot__celerybeat_directory_volumes:
 nautobot__postgres_directory_volumes:
   - "{{ nautobot__postgres_data_dir }}:/var/lib/postgresql/data"
 nautobot__default_env:
-  TZ: "{{ container_time_zone | default('Europe/Paris') }}"
-  PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
-  GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+  TZ: "{{ (container_time_zone | default('Europe/Paris')) | string }}"
+  PUID: "{{ (nautobot__container_uid | default(docker_uid) | default(1040)) | string }}"
+  GUID: "{{ (nautobot__container_gid | default(docker_gid) | default(1001)) | string }}"
   NAUTOBOT_CREATE_SUPERUSER: "true"
   NAUTOBOT_SUPERUSER_NAME: "{{ nautobot__superuser_name | default('admin') }}"
   NAUTOBOT_SUPERUSER_EMAIL: "admin@admin.org"
@@ -166,14 +166,14 @@ nautobot__default_env:
   NAUTOBOT_AUTH_LDAP_BIND_DN: "{{ nautobot__ldap_auth_bind_dn }}"
   NAUTOBOT_AUTH_LDAP_BIND_PASSWORD: "{{ nautobot__ldap_auth_bind_pass }}"
 nautobot__redis_env:
-  TZ: "{{ container_time_zone | default('Europe/Paris') }}"
-  PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
-  GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+  TZ: "{{ (container_time_zone | default('Europe/Paris')) | string }}"
+  PUID: "{{ (nautobot__container_uid | default(docker_uid) | default(1040)) | string }}"
+  GUID: "{{ (nautobot__container_gid | default(docker_gid) | default(1001)) | string }}"
   REDIS_PASSWORD: "{{ nautobot__redis_password }}"
 nautobot__postgres_env:
-  TZ: "{{ container_time_zone | default('Europe/Paris') }}"
-  PUID: "{{ nautobot__container_uid | default(docker_uid) |default(1040) }}"
-  GUID: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+  TZ: "{{ (container_time_zone | default('Europe/Paris')) | string }}"
+  PUID: "{{ (nautobot__container_uid | default(docker_uid) | default(1040)) | string }}"
+  GUID: "{{ (nautobot__container_gid | default(docker_gid) | default(1001)) | string }}"
   POSTGRES_DB: "nautobot"
   POSTGRES_PASSWORD: "{{ nautobot__postgres_password }}"
   POSTGRES_USER: "{{ nautobot__postgres_user }}"

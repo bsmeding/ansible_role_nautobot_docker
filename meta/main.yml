@@ -34,5 +34,4 @@ galaxy_info:
     - dcim
     - netdevops
 
-dependencies:
-  - bsmeding.docker
+dependencies: []
