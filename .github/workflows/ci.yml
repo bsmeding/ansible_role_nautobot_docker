@@ -63,7 +63,7 @@ jobs:
         with:
           path: 'bsmeding.nautobot_docker'
 
-      - name: Set up Python 3.
+      - name: Set up Python 3
         uses: actions/setup-python@v6
         with:
           python-version: '3.13' # 3.x installad 3.14 and that is not supported by Ansible
