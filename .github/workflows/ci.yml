@@ -42,8 +42,10 @@ jobs:
       matrix:
         distro:
           # - rockylinux9
-          # - ubuntu2204
+          - ubuntu2204
+          - ubuntu2404
           - debian12
+          - debian13
 
     steps:
       - name: Free Disk Space (Ubuntu)
