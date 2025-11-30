@@ -41,11 +41,11 @@ jobs:
     strategy:
       matrix:
         distro:
-          # - rockylinux9
-          - ubuntu2204
-          - ubuntu2404
           - debian12
           - debian13
+          - ubuntu2204
+          - ubuntu2404
+          # - rockylinux9
 
     steps:
       - name: Free Disk Space (Ubuntu)
