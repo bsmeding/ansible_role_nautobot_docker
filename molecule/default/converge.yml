@@ -10,6 +10,7 @@
     nautobot__network_cidr: '172.16.23.0/24'
     nautobot__remove_existing_container: false
     nautobot__remove_existing_home_dir: false
+    nautobot__pip_install_extra_args: '--break-system-packages'
   pre_tasks:
     - name: Update apt cache
       ansible.builtin.apt:
