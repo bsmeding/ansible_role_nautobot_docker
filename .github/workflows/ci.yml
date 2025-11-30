@@ -71,9 +71,6 @@ jobs:
       - name: Install test dependencies.
         run: pip3 install ansible molecule molecule-plugins[docker] docker netaddr requests
 
-      - name: Prep Molecule tmp dir
-        run: mkdir -p .molecule/ansible-tmp
-
       - name: Pull CICD image
         run: docker pull bsmeding/ansible_cicd_${{ matrix.distro }}:latest
 
