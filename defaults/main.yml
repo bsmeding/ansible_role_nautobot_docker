@@ -12,7 +12,7 @@ nautobot__install_ansible_collections:
   - ansible.netcommon
   - ansible.utils
 nautobot__ansible_collection_use_old_galaxy: false
-nautobot__pip_install_extra_args: ''
+nautobot__pip_install_extra_args: '--break-system-packages'
 nautobot__port_http: 8080
 nautobot__port_https: 8444
 nautobot__pause_before_start_worker: 0
