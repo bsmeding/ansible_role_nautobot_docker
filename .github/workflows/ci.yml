@@ -48,17 +48,17 @@ jobs:
           # - rockylinux9
 
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          tool-cache: false
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
+      # - name: Free Disk Space (Ubuntu)
+      #   uses: jlumbroso/free-disk-space@main
+      #   with:
+      #     tool-cache: false
+      #     android: true
+      #     dotnet: true
+      #     haskell: true
+      #     large-packages: true
+      #     docker-images: true
 
-      - name: Check out the codebase.
+      - name: Check out the codebase
         uses: actions/checkout@v5
         with:
           path: 'bsmeding.nautobot_docker'
@@ -68,13 +68,13 @@ jobs:
         with:
           python-version: '3.13' # 3.x installad 3.14 and that is not supported by Ansible
 
-      - name: Install test dependencies.
+      - name: Install test dependencies
         run: pip3 install ansible molecule molecule-plugins[docker] docker netaddr requests
 
       - name: Pull CICD image
         run: docker pull bsmeding/ansible_cicd_${{ matrix.distro }}:latest
 
-      - name: Run Molecule tests.
+      - name: Run Molecule tests
         run: molecule test
         env:
           PY_COLORS: '1'
