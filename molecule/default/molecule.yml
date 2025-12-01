@@ -24,4 +24,3 @@ provisioner:
     prepare: ${MOLECULE_PLAYBOOK_PREPARE:-prepare.yml}
     converge: ${MOLECULE_PLAYBOOK:-converge.yml}
     verify: ${MOLECULE_PLAYBOOK_VERIFY:-verify.yml}
-

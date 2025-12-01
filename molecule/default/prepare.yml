@@ -26,4 +26,3 @@
         path: "{{ molecule_nautobot_home }}/config/custom_jinja_filters/ipaddress_filters.py"
         state: touch
         mode: "0666"
-
