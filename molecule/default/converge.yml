@@ -4,14 +4,32 @@
   become: true
   gather_facts: true
   vars:
-    nautobot__port_http: 8080
-    nautobot__port_https: 8443
+    nautobot__home: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') | default('/tmp/molecule', true) }}/nautobot"
+    nautobot__port_http: 18080
+    nautobot__port_https: 18443
+    nautobot__ports:
+      - "{{ nautobot__port_http }}:8080"
+      - "{{ nautobot__port_https }}:8443"
     nautobot__network: 'test_nautobot_network'
     nautobot__network_cidr: '172.16.23.0/24'
     nautobot__remove_existing_container: false
     nautobot__remove_existing_home_dir: false
     nautobot__pip_install_extra_args: '--break-system-packages'
   pre_tasks:
+    - name: Capture default Nautobot volume mappings
+      ansible.builtin.set_fact:
+        molecule_default_directory_volumes: "{{ nautobot__directory_volumes }}"
+        molecule_default_file_volumes: "{{ nautobot__file_volumes }}"
+
+    - name: Override Nautobot volumes for Molecule workspace
+      ansible.builtin.set_fact:
+        nautobot__directory_volumes: >
+          {{
+            [ nautobot__home ~ '/config:/opt/nautobot/config' ]
+            + molecule_default_directory_volumes
+          }}
+        nautobot__file_volumes: []
+
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: true

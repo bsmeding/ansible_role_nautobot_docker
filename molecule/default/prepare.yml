@@ -1,0 +1,32 @@
+---
+- name: Prepare Nautobot host paths
+  hosts: all
+  become: true
+  gather_facts: false
+  vars:
+    molecule_nautobot_home: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') | default('/tmp/molecule', true) }}/nautobot"
+  tasks:
+    - name: Ensure Nautobot config directory exists
+      ansible.builtin.file:
+        path: "{{ molecule_nautobot_home }}/config"
+        state: directory
+        mode: "0770"
+
+    - name: Touch Nautobot config file
+      ansible.builtin.file:
+        path: "{{ molecule_nautobot_home }}/config/nautobot_config.py"
+        state: touch
+        mode: "0660"
+
+    - name: Ensure custom_jinja_filters directory exists
+      ansible.builtin.file:
+        path: "{{ molecule_nautobot_home }}/config/custom_jinja_filters"
+        state: directory
+        mode: "0770"
+
+    - name: Touch Nautobot custom filters file
+      ansible.builtin.file:
+        path: "{{ molecule_nautobot_home }}/config/custom_jinja_filters/ipaddress_filters.py"
+        state: touch
+        mode: "0660"
+

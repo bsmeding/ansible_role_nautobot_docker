@@ -3,15 +3,40 @@
   hosts: all
   become: true
   gather_facts: false
+  vars:
+    molecule_nautobot_home: "{{ lookup('env', 'MOLECULE_EPHEMERAL_DIRECTORY') | default('/tmp/molecule', true) }}/nautobot"
+    molecule_nautobot_http_port: 18080
+    molecule_nautobot_https_port: 18443
   vars_files:
     - ../../defaults/main.yml
   tasks:
-    - name: Wait for Nautobot HTTP port
-      ansible.builtin.wait_for:
-        host: 127.0.0.1
-        port: "{{ nautobot__port_http }}"
-        delay: 10
-        timeout: 300
+    - name: Set molecule testing ports
+      ansible.builtin.set_fact:
+        nautobot__home: "{{ molecule_nautobot_home }}"
+        nautobot__port_http: "{{ molecule_nautobot_http_port }}"
+        nautobot__port_https: "{{ molecule_nautobot_https_port }}"
+
+    - name: Capture default Nautobot volume mappings
+      ansible.builtin.set_fact:
+        molecule_default_directory_volumes: "{{ nautobot__directory_volumes }}"
+        molecule_default_file_volumes: "{{ nautobot__file_volumes }}"
+
+    - name: Override Nautobot volumes for Molecule workspace
+      ansible.builtin.set_fact:
+        nautobot__directory_volumes: >
+          {{
+            [ nautobot__home ~ '/config:/opt/nautobot/config' ]
+            + molecule_default_directory_volumes
+          }}
+        nautobot__file_volumes: []
+
+    - name: Wait for Nautobot HTTP endpoint inside container
+      ansible.builtin.command: >
+        docker exec {{ nautobot__name }} curl -fsS -o /dev/null http://127.0.0.1:8080
+      register: nautobot_http_ready
+      retries: 60
+      delay: 5
+      until: nautobot_http_ready.rc == 0
       changed_when: false
 
     - name: Verify Nautobot container is running
@@ -26,12 +51,11 @@
           - nautobot_container_info.container.State.Running | default(false)
         fail_msg: "Nautobot container is not running"
 
-    - name: Check HTTP endpoint responds
-      ansible.builtin.uri:
-        url: "http://localhost:{{ nautobot__port_http }}"
-        status_code: 200
+    - name: Check HTTP endpoint responds from inside container
+      ansible.builtin.command: >
+        docker exec {{ nautobot__name }} curl -fsS -o /dev/null http://127.0.0.1:8080
       register: nautobot_http
       retries: 36
       delay: 5
-      until: nautobot_http.status == 200
+      until: nautobot_http.rc == 0
       changed_when: false
