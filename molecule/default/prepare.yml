@@ -7,12 +7,6 @@
     molecule_nautobot_directories:
       - config
       - config/custom_jinja_filters
-      - logs
-      - media
-      - jobs
-      - static
-      - celerybeat_data
-      - pgdocker/13/data
   tasks:
     - name: Ensure Nautobot host directories exist and are writable
       ansible.builtin.file:

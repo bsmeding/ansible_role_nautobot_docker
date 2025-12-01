@@ -16,18 +16,10 @@
         nautobot__port_http: "{{ molecule_nautobot_http_port }}"
         nautobot__port_https: "{{ molecule_nautobot_https_port }}"
 
-    - name: Capture default Nautobot volume mappings
-      ansible.builtin.set_fact:
-        molecule_default_directory_volumes: "{{ nautobot__directory_volumes }}"
-        molecule_default_file_volumes: "{{ nautobot__file_volumes }}"
-
     - name: Override Nautobot volumes for Molecule workspace
       ansible.builtin.set_fact:
-        nautobot__directory_volumes: >
-          {{
-            [ nautobot__home ~ '/config:/opt/nautobot/config' ]
-            + molecule_default_directory_volumes
-          }}
+        nautobot__directory_volumes:
+          - "{{ nautobot__home }}/config:/opt/nautobot/config"
         nautobot__file_volumes: []
 
     - name: Wait for Nautobot HTTP endpoint inside container
