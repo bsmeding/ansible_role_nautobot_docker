@@ -46,12 +46,16 @@ ansible-galaxy install -r requirements.yml
 
 ### Example Playbook
 
+Since Django 4.0 the CSRF must set correctly including a scheme, please set this according your fqdn url in the `nautobot__url` variable
+
 ```yaml
 ---
 - name: Install Nautobot
   hosts: [nautobot]
   gather_facts: true
   become: yes
+  vars:
+    nautobot__url: 'https://cmdb.mydomain.com'
   tasks:
     - name: Check if Docker is installed
       include_role:

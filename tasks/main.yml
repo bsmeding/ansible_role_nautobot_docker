@@ -8,28 +8,6 @@
       - nautobot__superuser_api_token is defined and (nautobot__superuser_api_token | length < 41)
     fail_msg: "Required Nautobot variables are missing or invalid."
 
-- name: Include OS-specific vars
-  include_vars: "{{ ansible_os_family }}.yml"
-
-- name: Install packages for OS
-  ansible.builtin.package:
-    name={{ item.name }}
-    version={{ item.version | default(omit) }}
-  with_items: "{{ os_packages }}"
-  become: true
-  when: os_packages is defined
-
-- name: Install  pip packages
-  ansible.builtin.pip:
-    name: "{{ item }}"
-    state: forcereinstall
-    executable: pip3
-    extra_args: "--user --upgrade {{ nautobot__pip_install_extra_args }}"
-    umask: "0022"
-  changed_when: false
-  with_items: "{{ python_packages }}"
-  when: python_packages is defined
-
 - name: Remove existing {{ nautobot__name }} containers
   block:
     - name: Remove default
@@ -357,7 +335,18 @@
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:
-    nautobot__image: "networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.11') }}"
+    nautobot__image: >-
+      {%- set image_parts = nautobot__image.split(':') -%}
+      {%- if image_parts | length > 1 -%}
+        {%- set image_tag = image_parts[1] -%}
+        {%- if '-py' in image_tag -%}
+          networktocode/{{ nautobot__image }}
+        {%- else -%}
+          networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.12') }}
+        {%- endif -%}
+      {%- else -%}
+        networktocode/{{ nautobot__image }}:latest-py{{ nautobot__image_python_version | default('3.12') }}
+      {%- endif -%}
   when: nautobot__custom_image is undefined or nautobot__custom_image == ''
 
 - name: Set Docker Hub image for custom image

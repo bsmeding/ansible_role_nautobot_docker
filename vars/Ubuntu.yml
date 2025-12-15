@@ -1,5 +1,0 @@
----
-os_packages:
-  - name: python3-pip
-  - name: python3-netaddr
-  - name: python3-requests
