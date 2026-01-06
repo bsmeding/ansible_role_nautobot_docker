@@ -273,32 +273,63 @@
     group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
     mode: "0760"
 
-- name: Plugins found - build custom image (only when networktocode image is used)
-  when: nautobot__plugins is defined and nautobot__plugins|length>0 and (nautobot__custom_image is undefined or nautobot__custom_image == '')
+- name: Store original image name for Dockerfile template
+  ansible.builtin.set_fact:
+    nautobot__image_original: "{{ nautobot__image }}"
+  when: nautobot__custom_image is undefined or nautobot__custom_image == ''
+
+- name: Build custom image when plugins or extra pip packages are defined
+  when: >
+    (nautobot__custom_image is undefined or nautobot__custom_image == '') and
+    ((nautobot__plugins is defined and nautobot__plugins|length>0) or
+     (nautobot__extra_pip_packages is defined and nautobot__extra_pip_packages|length>0))
   block:
-    - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }} exists"
+    - name: Set Docker Hub base image name for pulling
+      ansible.builtin.set_fact:
+        nautobot__base_image: >-
+          {%- set image_parts = nautobot__image_original.split(':') -%}
+          {%- if image_parts | length > 1 -%}
+            {%- set image_tag = image_parts[1] -%}
+            {%- if '-py' in image_tag -%}
+              networktocode/{{ nautobot__image_original }}
+            {%- else -%}
+              networktocode/{{ nautobot__image_original }}-py{{ nautobot__image_python_version | default('3.12') }}
+            {%- endif -%}
+          {%- else -%}
+            networktocode/{{ nautobot__image_original }}:latest-py{{ nautobot__image_python_version | default('3.12') }}
+          {%- endif -%}
+
+    - name: Pull base Nautobot image
+      community.docker.docker_image:
+        name: "{{ nautobot__base_image }}"
+        source: pull
+      when: nautobot__pull_image | default(false) | bool
+
+    - name: "Check if image {{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }} exists"
       community.docker.docker_image_info:
         name:
-          - "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+          - "{{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
       register: result_local_image
 
-    - name: Copy Dockerfile with plugins
+    - name: Copy Dockerfile with plugins and/or extra pip packages
       template:
-        src: "{% if (nautobot__image | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
+        src: "{% if (nautobot__image_original | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
         dest: "{{ nautobot__home }}/Dockerfile"
         owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
         group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
         mode: "0760"
       register: dockerfile
+      vars:
+        nautobot__image: "{{ nautobot__image_original }}"
 
-    - name: Build Nautobot with custom plugins
+    - name: Build Nautobot custom image
       community.docker.docker_image:
         name: "{{ nautobot__name }}-custom"
-        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        tag: "{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
         build:
           path: "{{ nautobot__home }}"
           nocache: true
-          pull: false # "{{ nautobot__pull_image | default(false) }}"
+          pull: "{{ nautobot__pull_image | default(false) }}"
           args:
             http_proxy: "{{ http_proxy | default('') }}"
             https_proxy: "{{ https_proxy | default('') }}"
@@ -314,14 +345,14 @@
         state: restarted
       when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
-    - name: Build Nautobot with custom plugins (second attempt)
+    - name: Build Nautobot custom image (second attempt)
       community.docker.docker_image:
         name: "{{ nautobot__name }}-custom"
-        tag: "{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        tag: "{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
         build:
           path: "{{ nautobot__home }}"
           nocache: true
-          pull: false # "{{ nautobot__pull_image | default(false) }}"
+          pull: "{{ nautobot__pull_image | default(false) }}"
           args:
             http_proxy: "{{ http_proxy | default('') }}"
             https_proxy: "{{ https_proxy | default('') }}"
@@ -329,25 +360,28 @@
         force_source: yes
       when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
-    - name: Override image name with local Docker
+    - name: Override image name with local custom image
       ansible.builtin.set_fact:
-        nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image | split(':'))[1] | default('latest') }}"
+        nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:
     nautobot__image: >-
-      {%- set image_parts = nautobot__image.split(':') -%}
+      {%- set image_parts = nautobot__image_original.split(':') -%}
       {%- if image_parts | length > 1 -%}
         {%- set image_tag = image_parts[1] -%}
         {%- if '-py' in image_tag -%}
-          networktocode/{{ nautobot__image }}
+          networktocode/{{ nautobot__image_original }}
         {%- else -%}
-          networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.12') }}
+          networktocode/{{ nautobot__image_original }}-py{{ nautobot__image_python_version | default('3.12') }}
         {%- endif -%}
       {%- else -%}
-        networktocode/{{ nautobot__image }}:latest-py{{ nautobot__image_python_version | default('3.12') }}
+        networktocode/{{ nautobot__image_original }}:latest-py{{ nautobot__image_python_version | default('3.12') }}
       {%- endif -%}
-  when: nautobot__custom_image is undefined or nautobot__custom_image == ''
+  when: >
+    (nautobot__custom_image is undefined or nautobot__custom_image == '') and
+    not ((nautobot__plugins is defined and nautobot__plugins|length>0) or
+         (nautobot__extra_pip_packages is defined and nautobot__extra_pip_packages|length>0))
 
 - name: Set Docker Hub image for custom image
   ansible.builtin.set_fact:
@@ -407,15 +441,14 @@
   changed_when: false
   ignore_errors: true
 
-- name: Wait for Nautobot container to be healthy (migrations completed)
+- name: Wait for Nautobot container to be ready (migrations completed)
   community.docker.docker_container_info:
     name: "{{ nautobot__name }}"
   register: nautobot_health
   until: >
     nautobot_health.exists | default(false) and
-    (nautobot_health.container.State.Health.Status | default('') == 'healthy' or
-     (nautobot_health.container.State.Health is not defined and nautobot_health.container.State.Status | default('') == 'running'))
-  retries: 60
+    nautobot_health.container.State.Status | default('') == 'running'
+  retries: 6
   delay: 5
   changed_when: false
 
