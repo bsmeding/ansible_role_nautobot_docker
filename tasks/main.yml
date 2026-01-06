@@ -370,9 +370,54 @@
     healthcheck:
       interval: "5s"
       timeout: "5s"
-      start_period: "5s"
+      start_period: "{{ nautobot__healthcheck_start_period | default('300s') }}"
       retries: 3
       test: ["CMD", "nautobot-server", "health_check"]
+
+- name: Wait for Nautobot container to be running
+  community.docker.docker_container_info:
+    name: "{{ nautobot__name }}"
+  register: nautobot_container_info
+  until: nautobot_container_info.exists | default(false) and nautobot_container_info.container.State.Status | default('') == 'running'
+  retries: 30
+  delay: 2
+  changed_when: false
+
+- name: Wait for database migrations to complete
+  community.docker.docker_container_exec:
+    container: "{{ nautobot__name }}"
+    command: >
+      sh -c "
+      for i in \$(seq 1 120); do
+        if nautobot-server migrate --check 2>&1 | grep -q 'No migrations to apply'; then
+          exit 0
+        fi
+        if [ \$i -eq 120 ]; then
+          echo 'Migrations check timeout after 10 minutes'
+          exit 1
+        fi
+        sleep 5
+      done
+      "
+  register: migration_check
+  until: migration_check.rc == 0
+  retries: 1
+  delay: 0
+  failed_when: false
+  changed_when: false
+  ignore_errors: true
+
+- name: Wait for Nautobot container to be healthy (migrations completed)
+  community.docker.docker_container_info:
+    name: "{{ nautobot__name }}"
+  register: nautobot_health
+  until: >
+    nautobot_health.exists | default(false) and
+    (nautobot_health.container.State.Health.Status | default('') == 'healthy' or
+     (nautobot_health.container.State.Health is not defined and nautobot_health.container.State.Status | default('') == 'running'))
+  retries: 60
+  delay: 5
+  changed_when: false
 
 - name: Pause for starting worker (for example when migrations are needed)
   pause:
