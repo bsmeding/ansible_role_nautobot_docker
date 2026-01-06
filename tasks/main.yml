@@ -311,9 +311,25 @@
           - "{{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
       register: result_local_image
 
+    - name: Determine Dockerfile template to use
+      ansible.builtin.set_fact:
+        dockerfile_template: >-
+          {%- set image_tag = (nautobot__image_original | split(':'))[1] | default('latest') -%}
+          {%- set tag_parts = image_tag.split('-') -%}
+          {%- set version_part = tag_parts[0] -%}
+          {%- if version_part | regex_search('^[0-9]+\\.[0-9]+\\.[0-9]+') -%}
+            {%- if version_part is version('2.0.0', '<=') -%}
+              Dockerfile_v1.j2
+            {%- else -%}
+              Dockerfile.j2
+            {%- endif -%}
+          {%- else -%}
+            Dockerfile.j2
+          {%- endif -%}
+
     - name: Copy Dockerfile with plugins and/or extra pip packages
       template:
-        src: "{% if (nautobot__image_original | split(':'))[1] is version('2.0.0', '<=') %}Dockerfile_v1.j2{% else %}Dockerfile.j2{% endif %}"
+        src: "{{ dockerfile_template }}"
         dest: "{{ nautobot__home }}/Dockerfile"
         owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
         group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
