@@ -412,6 +412,7 @@
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
     image: "{{ nautobot__image }}"
+    pull: false
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"

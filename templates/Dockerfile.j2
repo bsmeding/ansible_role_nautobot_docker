@@ -3,9 +3,12 @@ ARG NAUTOBOT_IMAGE={{ nautobot__image }}
 # ---------------------------------
 # Stage: PreRequistics
 # ---------------------------------
-# If the image tag already contains a "-py" suffix (e.g. "stable-py3.12"),
-# use it as-is. Otherwise append "-py<version>".
-FROM {% if '-py' in NAUTOBOT_IMAGE %}networktocode/{{ nautobot__image }}{% else %}networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}{% endif %} as base
+# If the Nautobot image tag already contains a "-py" suffix (e.g. "nautobot:stable-py3.12"),
+# use it as-is. Otherwise append "-py<version>" to the tag.
+{% set _parts = (nautobot__image | string).split(':') %}
+{% set _name = _parts[0] %}
+{% set _tag = _parts[1] if _parts|length > 1 else 'latest' %}
+FROM {% if '-py' in _tag %}networktocode/{{ _name }}:{{ _tag }}{% else %}networktocode/{{ _name }}:{{ _tag }}-py{{ nautobot__image_python_version | default('3.9') }}{% endif %} as base
 USER 0
 
 {% if http_proxy is defined and http_proxy != '' %}
