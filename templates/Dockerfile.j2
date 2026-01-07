@@ -3,7 +3,9 @@ ARG NAUTOBOT_IMAGE={{ nautobot__image }}
 # ---------------------------------
 # Stage: PreRequistics
 # ---------------------------------
-FROM networktocode/${NAUTOBOT_IMAGE}-py${PYTHON_VER} as base
+# If the image tag already contains a "-py" suffix (e.g. "stable-py3.12"),
+# use it as-is. Otherwise append "-py<version>".
+FROM {% if '-py' in NAUTOBOT_IMAGE %}networktocode/{{ nautobot__image }}{% else %}networktocode/{{ nautobot__image }}-py{{ nautobot__image_python_version | default('3.9') }}{% endif %} as base
 USER 0
 
 {% if http_proxy is defined and http_proxy != '' %}

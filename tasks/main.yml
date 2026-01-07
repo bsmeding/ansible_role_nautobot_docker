@@ -352,7 +352,6 @@
         source: build
         force_source: yes
       register: docker_build
-      ignore_errors: true
       when: dockerfile.changed or result_local_image.images | length <1
 
     - name: Restart Docker if build failed
@@ -374,11 +373,16 @@
             https_proxy: "{{ https_proxy | default('') }}"
         source: build
         force_source: yes
+      register: docker_build_second
       when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
     - name: Override image name with local custom image
       ansible.builtin.set_fact:
         nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
+      when: >
+        (docker_build is defined and docker_build.stdout is defined and 'Successfully tagged' in docker_build.stdout)
+        or
+        (docker_build_second is defined and docker_build_second.stdout is defined and 'Successfully tagged' in docker_build_second.stdout)
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:
