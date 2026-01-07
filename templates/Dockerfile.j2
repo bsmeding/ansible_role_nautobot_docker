@@ -41,7 +41,14 @@ RUN apt-get install -y gcc && \
 
 RUN pip3 install --upgrade pip wheel {{ nautobot__pip_install_extra_args }}
 RUN pip3 install --upgrade setuptools {{ nautobot__pip_install_extra_args }}
-RUN pip3 install --upgrade nautobot[ldap]=={{ (nautobot__image | split(':'))[1] }} {{ nautobot__pip_install_extra_args }}
+{% set image_tag = (nautobot__image | string).split(':')[1:] | first | default('') %}
+{% set tag_parts = image_tag.split('-') %}
+{% set version_part = tag_parts[0] %}
+{% if version_part | regex_search('^[0-9]+\\.[0-9]+\\.[0-9]+') %}
+RUN pip3 install --upgrade nautobot[ldap]=={{ version_part }} {{ nautobot__pip_install_extra_args }}
+{% else %}
+RUN pip3 install --upgrade nautobot[ldap] {{ nautobot__pip_install_extra_args }}
+{% endif %}
 RUN pip3 install --upgrade ansible-core=={{ nautobot_install_ansible_version | default('2.15.10') }}  {{ nautobot__pip_install_extra_args }}
 
 # Check extra pip packages to install
@@ -64,7 +71,9 @@ RUN ansible-galaxy collection install {{ ansible_collection }}{% if nautobot__an
 {% if nautobot__plugins is defined %}
 RUN pip3 install --upgrade nornir-nautobot {{ nautobot__pip_install_extra_args }}
 {% for plugin in nautobot__plugins %}
-RUN pip3 install --no-warn-script-location {{ plugin.plugin_name }}{% if plugin.plugin_version %}=={{ plugin.plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
+{% set _plugin_name = plugin.get('plugin_name') %}
+{% set _plugin_version = plugin.get('plugin_version') %}
+RUN pip3 install --no-warn-script-location {{ _plugin_name }}{% if _plugin_version is defined and _plugin_version %}=={{ _plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
 
 {% endfor %}
 {% endif %}
