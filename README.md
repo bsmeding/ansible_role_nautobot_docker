@@ -188,6 +188,71 @@ nautobot__plugins:
     }
 ```
 
+#### Installing Plugins with Pip Extras
+
+Some plugins require additional dependencies installed via pip extras (e.g., `plugin[extra]`). Use the `plugin_pip_extras` key to specify these extras:
+
+```yaml
+nautobot__plugins:
+  - plugin_name: nautobot-secrets-providers
+    plugin_pip_extras: '[onepassword]'
+    plugin_config: {
+      "nautobot_secrets_providers": {
+        # plugin configuration here
+      }
+    }
+```
+
+This will install `nautobot-secrets-providers[onepassword]` via pip, while Nautobot will still import the module as `nautobot_secrets_providers`.
+
+#### Using Environment Variables in Plugin Configuration
+
+When plugin configuration requires environment variables (e.g., for secrets), use the special marker `__ENV_VAR__<VARIABLE_NAME>__` in your YAML. The template will automatically convert this to Python code `os.environ.get("<VARIABLE_NAME>")` in the generated configuration file.
+
+**Example with 1Password Secrets Provider:**
+
+```yaml
+nautobot__env:
+  OP_SERVICE_ACCOUNT_TOKEN: !vault |
+    $ANSIBLE_VAULT;1.1;AES256
+    # ... vault encrypted token ...
+
+nautobot__plugins:
+  - plugin_name: nautobot-secrets-providers
+    plugin_pip_extras: '[onepassword]'
+    plugin_config: {
+      "nautobot_secrets_providers": {
+        "one_password": {
+          "token": "__ENV_VAR__OP_SERVICE_ACCOUNT_TOKEN__",
+          "vaults": {
+            "AutomationVault": {
+              "token": "__ENV_VAR__OP_SERVICE_ACCOUNT_TOKEN__",
+            },
+          },
+        },
+      },
+    }
+```
+
+This will generate the following in `nautobot_config.py`:
+
+```python
+PLUGINS_CONFIG = {
+    "nautobot_secrets_providers": {
+        "one_password": {
+            "token": os.environ.get("OP_SERVICE_ACCOUNT_TOKEN"),
+            "vaults": {
+                "AutomationVault": {
+                    "token": os.environ.get("OP_SERVICE_ACCOUNT_TOKEN"),
+                }
+            }
+        }
+    }
+}
+```
+
+**Note:** Make sure the environment variable is set in `nautobot__env` so it's available to the Nautobot container at runtime.
+
 Add GraphQL queries so that the variables can be retreived in the Jinja templating (Extensibility -> GraphQL Queries)
 
 Examplje GraphQL

@@ -376,6 +376,12 @@
       register: docker_build_second
       when: "docker_build.stdout is defined and not 'Successfully tagged' in docker_build.stdout"
 
+    - name: Check if custom image exists locally
+      community.docker.docker_image_info:
+        name: "{{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
+      register: custom_image_exists
+      ignore_errors: yes
+
     - name: Override image name with local custom image
       ansible.builtin.set_fact:
         nautobot__image: "{{ nautobot__name }}-custom:{{ (nautobot__image_original | split(':'))[1] | default('latest') }}"
@@ -383,6 +389,8 @@
         (docker_build is defined and docker_build.stdout is defined and 'Successfully tagged' in docker_build.stdout)
         or
         (docker_build_second is defined and docker_build_second.stdout is defined and 'Successfully tagged' in docker_build_second.stdout)
+        or
+        (custom_image_exists.images | default([]) | length > 0)
 
 - name: Set Docker Hub image for networktocode base image
   ansible.builtin.set_fact:

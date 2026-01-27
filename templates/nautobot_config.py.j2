@@ -4,7 +4,7 @@ import ldap
 
 from nautobot.core.settings import *  # noqa F401,F403
 from nautobot.core.settings_funcs import is_truthy
-from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType, NestedGroupOfNamesType, NestedActiveDirectoryGroupType
+from django_auth_ldap.config import LDAPSearch, LDAPGroupQuery, GroupOfNamesType, NestedGroupOfNamesType, NestedActiveDirectoryGroupType, PosixGroupType
 from custom_jinja_filters import ipaddress_filters
 
 
@@ -139,7 +139,11 @@ AUTH_LDAP_USER_ATTR_MAP = {{ nautobot__ldap_search_users_attribute_map }}
 # GROUPS
 #AUTH_LDAP_GROUP_SEARCH = LDAPSearch("dc=example,dc=com", ldap.SCOPE_SUBTREE,"(objectClass=group)")
 #AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+{% if nautobot__ldap_group_search_filter is defined and nautobot__ldap_group_search_filter|length>5 %}
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_group_search }}", ldap.SCOPE_SUBTREE, "{{ nautobot__ldap_group_search_filter }}")
+{% else %}
 AUTH_LDAP_GROUP_SEARCH = LDAPSearch("{{ nautobot__ldap_group_search }}", ldap.SCOPE_SUBTREE, "(objectClass={{ nautobot__ldap_group_search_objectclass }})")
+{% endif %}
 AUTH_LDAP_GROUP_TYPE = {{ nautobot__ldap_group_search_group_type }}
 
 AUTH_LDAP_MIRROR_GROUPS = {{ nautobot__ldap_mirror_groups | capitalize}}
@@ -440,6 +444,6 @@ PLUGINS = {{ nautobot__plugins_list }}
 #         'buzz': 'bazz'
 #     }
 #
-PLUGINS_CONFIG = {{ nautobot__plugin_config |to_nice_json | replace('true','True') | replace('false','False')  | replace('"None"','None') }}
+PLUGINS_CONFIG = {{ nautobot__plugin_config |to_nice_json | replace('true','True') | replace('false','False')  | replace('"None"','None') | replace('"__ENV_VAR__OP_SERVICE_ACCOUNT_TOKEN__"', 'os.environ.get("OP_SERVICE_ACCOUNT_TOKEN")') }}
 
 {% endif %}

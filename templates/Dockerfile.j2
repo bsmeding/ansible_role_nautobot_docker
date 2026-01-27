@@ -73,7 +73,8 @@ RUN pip3 install --upgrade nornir-nautobot {{ nautobot__pip_install_extra_args }
 {% for plugin in nautobot__plugins %}
 {% set _plugin_name = plugin.get('plugin_name') %}
 {% set _plugin_version = plugin.get('plugin_version') %}
-RUN pip3 install --no-warn-script-location {{ _plugin_name }}{% if _plugin_version is defined and _plugin_version %}=={{ _plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
+{% set _plugin_pip_extras = plugin.get('plugin_pip_extras') %}
+RUN pip3 install --no-warn-script-location {{ _plugin_name }}{% if _plugin_pip_extras is defined %}{{ _plugin_pip_extras }}{% endif %}{% if _plugin_version is defined and _plugin_version %}=={{ _plugin_version }}{% endif %} {{ nautobot__pip_install_extra_args }}
 
 {% endfor %}
 {% endif %}
