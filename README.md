@@ -83,15 +83,15 @@ Below are key variables for customizing the Nautobot Docker installation. These 
   - Default: `'nautobot'`
 
 - **`nautobot__image`**: Specifies the Docker image for Nautobot.
-  - Default: `'nautobot:2.3'`
+  - Default: `'nautobot:stable-py3.12'`
 
 - **`nautobot__custom_image`**: Specifies a custom Nautobot image
-  - Example: `'bsmeding/nautobot:2.3'`
+  - Example: `'bsmeding/nautobot:stable-py3.12'`
   - 
 ### Python & Ansible Configuration
 
 - **`nautobot__image_python_version`**: Python version to be used in the container.
-  - Default: `'3.9'`
+  - Default: `'3.12'`
 
 - **`nautobot__install_ansible_version`**: The Ansible version to install in the container.
   - Default: `'8.2.0'`
@@ -127,7 +127,7 @@ Below are key variables for customizing the Nautobot Docker installation. These 
   - Default: `false`
 
 - **`nautobot__pull_image`**: Whether to pull the latest Docker image on deployment.
-  - Default: `true`
+  - Default: `false`
 
 ### User & Permissions Configuration
 
@@ -350,11 +350,26 @@ query ($device_id: ID!) {
 ### Custom Python or OS Packages
 
 - **`nautobot__extra_pip_packages`**: Add additional Python packages needed in the container.
-- **`nautobot__extra_os_packages`**: Add extra OS packages as necessary.
 
 ### Migrating from v1 to v2
 
 If migrating from Nautobot v1 to v2, set `nautobot__pause_before_start_worker` to at least `600` seconds to allow the database to migrate before starting workers.
+
+---
+
+## Version Matrix
+
+Current defaults and recommendations:
+
+| Component | Current default | Notes |
+|---|---|---|
+| Nautobot image | `nautobot:stable-py3.12` | Good default for current upstream images. |
+| Python in image | `3.12` | Matches default Nautobot image tag. |
+| Redis image | `redis:alpine` | Works, but consider pinning major version (for example `redis:7-alpine`) for reproducibility. |
+| PostgreSQL image | `postgres:13` | PostgreSQL 13 is EOL; plan upgrade to `postgres:15` or `postgres:16` after validation. |
+| Ansible in container | `8.2.0` | Old; plan to test and move to a newer supported major version. |
+
+> Recommendation: treat PostgreSQL and Ansible updates as planned changes and validate with Molecule/CI before changing role defaults in production.
 
 ---
 
