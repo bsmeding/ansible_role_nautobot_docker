@@ -22,14 +22,42 @@
           - "{{ nautobot__home }}/config:/opt/nautobot/config"
         nautobot__file_volumes: []
 
+    - name: Wait for Nautobot container to be running
+      community.docker.docker_container_info:
+        name: "{{ nautobot__name }}"
+      register: nautobot_container_wait
+      retries: 60
+      delay: 5
+      until: >
+        nautobot_container_wait.exists | default(false) and
+        nautobot_container_wait.container.State.Running | default(false)
+      changed_when: false
+
     - name: Wait for Nautobot HTTP endpoint inside container
       ansible.builtin.command: >
         docker exec {{ nautobot__name }} curl -fsS -o /dev/null http://127.0.0.1:8080
       register: nautobot_http_ready
-      retries: 60
+      retries: 120
       delay: 5
       until: nautobot_http_ready.rc == 0
       changed_when: false
+      failed_when: false
+
+    - name: Gather Nautobot container logs when HTTP is not ready
+      ansible.builtin.command: "docker logs --tail 200 {{ nautobot__name }}"
+      register: nautobot_container_logs
+      changed_when: false
+      when: nautobot_http_ready.rc != 0
+
+    - name: Assert Nautobot HTTP endpoint became ready
+      ansible.builtin.assert:
+        that:
+          - nautobot_http_ready.rc == 0
+        fail_msg: >-
+          Nautobot HTTP endpoint did not become ready in time.
+          Container state={{ nautobot_container_wait.container.State.Status | default('unknown') }}.
+          Recent logs:
+          {{ (nautobot_container_logs.stdout | default('No logs available'))[:4000] }}
 
     - name: Verify Nautobot container is running
       community.docker.docker_container_info:
