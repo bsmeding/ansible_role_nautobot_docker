@@ -40,3 +40,28 @@
 
   roles:
     - role: bsmeding.nautobot_docker
+  post_tasks:
+    - name: Wait for Nautobot HTTP endpoint during converge
+      ansible.builtin.command: >
+        docker exec {{ nautobot__name }} curl -fsS -o /dev/null http://127.0.0.1:8080
+      register: nautobot_http_ready_converge
+      retries: 120
+      delay: 5
+      until: nautobot_http_ready_converge.rc == 0
+      changed_when: false
+      failed_when: false
+
+    - name: Gather Nautobot container logs when converge HTTP wait fails
+      ansible.builtin.command: "docker logs --tail 200 {{ nautobot__name }}"
+      register: nautobot_converge_container_logs
+      changed_when: false
+      when: nautobot_http_ready_converge.rc != 0
+
+    - name: Assert Nautobot HTTP endpoint became ready during converge
+      ansible.builtin.assert:
+        that:
+          - nautobot_http_ready_converge.rc == 0
+        fail_msg: >-
+          Nautobot HTTP endpoint did not become ready during converge.
+          Recent logs:
+          {{ (nautobot_converge_container_logs.stdout | default('No logs available'))[:4000] }}
