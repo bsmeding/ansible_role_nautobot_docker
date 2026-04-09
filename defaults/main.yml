@@ -5,8 +5,10 @@ nautobot__image: nautobot:stable-py3.12
 nautobot__redis_image: redis:alpine
 # nautobot__custom_image: 'bsmeding/nautobot:3.0.2-py3.11' # Use when not default networktocode image is used
 nautobot__custom_jinja_filters_path: 'files/custom_jinja_filters'
+# Must match the Python variant in nautobot__image (e.g. stable-py3.12).
 nautobot__image_python_version: '3.12'
-nautobot__install_ansible_version: '8.2.0'
+# Pip package ansible-core (2.x), not the ansible community metapackage (8.x, 9.x, …).
+nautobot__install_ansible_version: '2.18.15'
 nautobot__number_of_workers: 1
 nautobot__install_ansible_collections:
   - ansible.netcommon

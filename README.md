@@ -93,8 +93,8 @@ Below are key variables for customizing the Nautobot Docker installation. These 
 - **`nautobot__image_python_version`**: Python version to be used in the container.
   - Default: `'3.12'`
 
-- **`nautobot__install_ansible_version`**: The Ansible version to install in the container.
-  - Default: `'8.2.0'`
+- **`nautobot__install_ansible_version`**: **`ansible-core`** version to install in custom plugin/extra-pip Docker builds (`pip install ansible-core==…`), not the `ansible` community package version (8.x, 9.x, …).
+  - Default: `'2.18.15'` (pin a current maintained `ansible-core` release for your environment)
 
 - **`nautobot__install_ansible_collections`**: List of Ansible collections to install in the container.
   - Default: `['ansible.netcommon', 'ansible.utils']`
