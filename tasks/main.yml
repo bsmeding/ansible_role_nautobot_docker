@@ -449,23 +449,11 @@
 - name: Wait for database migrations to complete
   community.docker.docker_container_exec:
     container: "{{ nautobot__name }}"
-    command: >
-      sh -c "
-      for i in \$(seq 1 120); do
-        if nautobot-server migrate --check 2>&1 | grep -q 'No migrations to apply'; then
-          exit 0
-        fi
-        if [ \$i -eq 120 ]; then
-          echo 'Migrations check timeout after 10 minutes'
-          exit 1
-        fi
-        sleep 5
-      done
-      "
+    command: "nautobot-server migrate --check"
   register: migration_check
   until: migration_check.rc == 0
-  retries: 1
-  delay: 0
+  retries: 120
+  delay: 5
   failed_when: false
   changed_when: false
   ignore_errors: true
@@ -496,7 +484,7 @@
     command: "nautobot-server rqworker"
     command_handling: "compatibility"
     user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
-    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    env: "{{ nautobot__default_env | combine(nautobot__env) | combine({'NAUTOBOT_DOCKER_SKIP_INIT': 'true'}) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options | default(omit) }}"
@@ -518,7 +506,7 @@
     networks:
       - name: "{{ nautobot__network_name }}"
     # user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
-    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    env: "{{ nautobot__default_env | combine(nautobot__env) | combine({'NAUTOBOT_DOCKER_SKIP_INIT': 'true'}) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options | default(omit) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__file_volumes }}"
@@ -541,7 +529,7 @@
     networks:
       - name: "{{ nautobot__network_name }}"
     # user: "{{ nautobot__container_uid | default('nautobot') }}:{{ nautobot__container_gid | default('nautobot') }}"
-    env: "{{ nautobot__default_env | combine(nautobot__env) }}"
+    env: "{{ nautobot__default_env | combine(nautobot__env) | combine({'NAUTOBOT_DOCKER_SKIP_INIT': 'true'}) }}"
     log_driver: "{{ nautobot__log_driver }}"
     log_options: "{{ nautobot__log_options | default(omit) }}"
     volumes: "{{ nautobot__directory_volumes + nautobot__celerybeat_directory_volumes + nautobot__file_volumes }}"
