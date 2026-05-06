@@ -366,7 +366,7 @@ Current defaults and recommendations:
 | Nautobot image | `nautobot:stable-py3.12` | Good default for current upstream images. |
 | Python in image | `3.12` | Matches default Nautobot image tag. |
 | Redis image | `redis:alpine` | Works, but consider pinning major version (for example `redis:7-alpine`) for reproducibility. |
-| PostgreSQL image | `postgres:13` | PostgreSQL 13 is EOL; plan upgrade to `postgres:15` or `postgres:16` after validation. |
+| PostgreSQL image | `postgres:16` | Nautobot/Django requires PostgreSQL 14 or later. Existing PostgreSQL 13 deployments must be upgraded intentionally before reusing old data volumes. |
 | Ansible in container | `8.2.0` | Old; plan to test and move to a newer supported major version. |
 
 > Recommendation: treat PostgreSQL and Ansible updates as planned changes and validate with Molecule/CI before changing role defaults in production.

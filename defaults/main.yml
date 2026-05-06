@@ -32,7 +32,7 @@ nautobot__napalm_password: cisco
 nautobot__napalm_args: {}
 nautobot__install_own_postgres_db: true
 nautobot__postgres_name: nautobot-db
-nautobot__postgres_image: postgres:13 # Apple Silicon have issues with 14, no need for nautobot to go to 14
+nautobot__postgres_image: postgres:16 # Nautobot/Django requires PostgreSQL 14 or later.
 nautobot__postgres_user: nautobotdbuser
 nautobot__postgres_password: nautobotdbpassword
 nautobot__postgres_data_dir: "{{ nautobot__home }}/pgdocker/{{ (nautobot__postgres_image | split(':'))[1] }}/data"
