@@ -4,7 +4,7 @@ galaxy_info:
   author: bsmeding
   description: Role to install Nautobot CMDB in Docker container
   company: "b@rtsmeding IT"
-  license: MIT
+  license: Apache-2.0
   min_ansible_version: '2.10'
   platforms:
     - name: Fedora
