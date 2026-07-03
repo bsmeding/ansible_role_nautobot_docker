@@ -327,6 +327,19 @@
             Dockerfile.j2
           {%- endif -%}
 
+    - name: Write custom image build manifest
+      ansible.builtin.copy:
+        content: |
+          extra_pip_packages={{ nautobot__extra_pip_packages | default([]) | to_json }}
+          plugins={{ nautobot__plugins | default([]) | map(attribute='plugin_name') | list | to_json }}
+          ansible_collections={{ nautobot__install_ansible_collections | default([]) | to_json }}
+          ansible_version={{ nautobot__install_ansible_version | default('2.18.15') }}
+        dest: "{{ nautobot__home }}/.custom_image_manifest"
+        owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
+        group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+        mode: "0640"
+      register: custom_image_manifest
+
     - name: Copy Dockerfile with plugins and/or extra pip packages
       template:
         src: "{{ dockerfile_template }}"
@@ -337,6 +350,15 @@
       register: dockerfile
       vars:
         nautobot__image: "{{ nautobot__image_original }}"
+
+    - name: Remember when custom image inputs changed
+      ansible.builtin.set_fact:
+        nautobot__custom_image_inputs_changed: >-
+          {{
+            (dockerfile.changed | default(false))
+            or (custom_image_manifest.changed | default(false))
+            or (nautobot__force_image_rebuild | default(false) | bool)
+          }}
 
     - name: Build Nautobot custom image
       community.docker.docker_image:
@@ -352,7 +374,9 @@
         source: build
         force_source: yes
       register: docker_build
-      when: dockerfile.changed or result_local_image.images | length <1
+      when: >
+        nautobot__custom_image_inputs_changed | bool
+        or result_local_image.images | length < 1
 
     - name: Restart Docker if build failed
       ansible.builtin.service:
@@ -416,11 +440,30 @@
     nautobot__image: "{{ nautobot__custom_image }}"
   when: nautobot__custom_image is defined and nautobot__custom_image != ''
 
+- name: Write container environment manifest
+  ansible.builtin.copy:
+    content: "{{ (nautobot__default_env | combine(nautobot__env | default({}))) | to_nice_json }}"
+    dest: "{{ nautobot__home }}/.container_env_manifest"
+    owner: "{{ nautobot__container_uid | default(docker_gid) |default(1001) }}"
+    group: "{{ nautobot__container_gid | default(docker_gid) |default(1001) }}"
+    mode: "0640"
+  register: container_env_manifest
+
+- name: Remember when containers should be recreated
+  ansible.builtin.set_fact:
+    nautobot__recreate_containers: >-
+      {{
+        (nautobot__custom_image_inputs_changed | default(false) | bool)
+        or (container_env_manifest.changed | default(false))
+        or (nautobot__force_container_recreate | default(false) | bool)
+      }}
+
 - name: Run nautobot container frontend
   community.docker.docker_container:
     name: "{{ nautobot__name }}"
     image: "{{ nautobot__image }}"
     pull: false
+    recreate: "{{ nautobot__recreate_containers | default(false) | bool }}"
     restart_policy: always
     network_mode: "{{ nautobot__network_mode }}"
     networks: "{{ nautobot__networks }}"
@@ -478,6 +521,7 @@
   community.docker.docker_container:
     name: "{{ nautobot__name }}-worker-{{ item }}"
     image: "{{ nautobot__image }}"
+    recreate: "{{ nautobot__recreate_containers | default(false) | bool }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -502,6 +546,7 @@
     name: "{{ nautobot__name }}-celery-worker-{{ item }}"
     hostname: "worker{{ item }}"
     image: "{{ nautobot__image }}"
+    recreate: "{{ nautobot__recreate_containers | default(false) | bool }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"
@@ -525,6 +570,7 @@
   community.docker.docker_container:
     name: "{{ nautobot__name }}-celery-beat"
     image: "{{ nautobot__image }}"
+    recreate: "{{ nautobot__recreate_containers | default(false) | bool }}"
     restart_policy: always
     networks:
       - name: "{{ nautobot__network_name }}"

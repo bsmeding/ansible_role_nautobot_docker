@@ -70,6 +70,8 @@ nautobot__remove_existing_container: false            # DO NOT USE WHEN RUNNING 
 nautobot__banner_login: 'nautobot demo use admin, admin to login'
 nautobot__banner_bottom: 'Use for demo only'
 nautobot__pull_image: false
+nautobot__force_image_rebuild: false
+nautobot__force_container_recreate: false
 nautobot__log_level: 'WARNING'                        # DEBUG  'INFO'    'WARNING'
 nautobot__network_mode:
 nautobot__network_name: nautobot
